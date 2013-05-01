@@ -43,7 +43,7 @@ $ sudo yum install gd-devel pcre-devel libcurl-devel
 
 ###下载nginx / tengine 源代码
 
-#### 然后下载本模块代码，并放置在nginx源代码的nginx_image_module目录下
+#### 然后下载本模块代码，并放在nginx源代码目录下
 #### 选Nginx还是Tengine,您自己看,两者选其一
 
 ```bash
