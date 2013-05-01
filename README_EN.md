@@ -51,7 +51,6 @@ $ cd nginx-1.4.0
 ```bash
 $ wget https://github.com/3078825/nginx-image/archive/master.zip
 $ unzip master.zip
-$ cd ..
 $ ./configure --add-module=./nginx-image-master
 $ make
 $ sudo make install 
