@@ -88,7 +88,7 @@ location / {
 ```
 
 或者指定目录开启 
-```
+```apache
 location /upload {
    root html; 
    image on;
@@ -98,7 +98,7 @@ location /upload {
 
 
 ## 其他参数说明：
-```
+```apache
 image on/off 是否开启缩略图功能,默认关闭
 
 image_backend on/off 是否开启镜像服务，当开启该功能时，请求目录不存在的图片（判断原图），将自动从镜像服务器地址下载原图
