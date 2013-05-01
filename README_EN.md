@@ -1,4 +1,4 @@
-# Nginx Image Thumb Module
+# Nginx Image Thumbnail Module
 
 
 ##### EMail:<3078825@qq.com>
@@ -127,25 +127,25 @@ image_water_color 水印文字颜色,默认 #000000
 
 If your nginx bind `127.0.0.1`
 
-In Nginx website root path exist `test.jpg` picture
+Put a picture named `test.jpg` into nginx website root path
 
 
-Visit `http://127.0.0.1/test.jpg!c300x200.jpg` nginx/tengine will auto  create/output   `test.jpg` **300x200** thumb picture
+Visit `http://127.0.0.1/test.jpg!c300x200.jpg` nginx/tengine will auto  create/output   `test.jpg` **300x200** thumbnail picture
 
-In **c** is thumb type， **300** is thumb picture width size     **200** is thumb picture height size
+In **c** parameter is thumbnail type， **300** is thumbnail picture width size     **200** is thumbnail picture height size
 
-Support Create / output **Four**type Thumb Picture。
+Support Create / output **Four**type thumbnail Picture。
 
 Support JPEG / PNG / GIF {not animation}
 
 
-**C** 参数按请求宽高比例从图片高度 **10%** 处开始截取图片，然后缩放/放大到指定尺寸（ **图片缩略图大小等于请求的宽高** ）
+**C** parameter requesting the aspect ratio from  **10%**  at the height of the image start capturing images, and zoom (in / out) to the specified size（ **Picture thumbnail size equal the request size** ）
  
-**M** 参数按请求宽高比例居中截图图片，然后缩放/放大到指定尺寸（ **图片缩略图大小等于请求的宽高** ）
+**M** Parameter requesting an aspect ratio of center screenshot picture, and then zoom (in / out) to the specified size（ **Picture thumbnail size equal the request size** ）
 
-**T** 参数按请求宽高比例按比例缩放/放大到指定尺寸（ **图片缩略图大小可能小于请求的宽高** )
+**T** parameters requesting aspect ratio scaling / zoom (in / out) to the specified size（ **Picture thumbnail size maybe small than request size** )
 
-**W** 参数按请求宽高比例缩放/放大到指定尺寸，空白处填充白色背景颜色（ **图片缩略图大小等于请求的宽高** ）
+**W** parameter requests aspect ratio scaling / zoom (in / out) to the specified size, fill in the white background color（ **Picture thumbnail size equal the request size** ）
 
 
  
