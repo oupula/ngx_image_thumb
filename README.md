@@ -42,6 +42,7 @@
 
 然后下载本模块代码，并放置在nginx源代码的nginx_image_module目录下
 ```
+# 下载Tengine
 #wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
 #tar -zxvf tengine-1.4.5.tar.gz
 #cd 解压后的目录
@@ -50,12 +51,18 @@
 ####选Nginx还是Tengine,您自己看,两者选其一
 
 ```
+# 下载Nginx
 #wget http://nginx.org/download/nginx-1.4.0.tar.gz
 #tar -zxvf nginx-1.4.0.tar.gz
 #cd 解压后的目录
 ```
 
-···
+```
+#mkdir ./nginx_image_module
+#cd ./nginx_image_module
+#wget https://github.com/3078825/nginx-image/archive/master.zip
+#unzip master.zip
+#cd ..
 #./configure --add-module=./nginx_image_module
 #make
 #make install 
