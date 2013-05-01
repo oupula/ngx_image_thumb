@@ -29,7 +29,7 @@ $ sudo yum install gd-devel pcre-devel libcurl-devel
 
 ### Download Nginx / Tengine Source Code
 
-#### DownLoad Nginx Image Module，put under the nginx_image_module directory
+#### DownLoad Nginx Image Module，put under the nginx source code directory
 #### Nginx or Tengine . You can choose one between these.
 
 ```bash
