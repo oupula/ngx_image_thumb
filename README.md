@@ -17,28 +17,29 @@
 
 ### Debian / Ubuntu 系统举例
 ```
-#apt-get install build-essential m4 autoconf automake make #如果你没有安装GCC相关环境才需要执行
-#apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
+# 如果你没有安装GCC相关环境才需要执行
+$sudo apt-get install build-essential m4 autoconf automake make 
+$sudo apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
 ```
 
 ### CentOS /RedHat / Fedora
 ```
-#请确保已经安装了gcc automake autoconf m4 
-#yum install gd-devel pcre-devel libcurl-devel 
+# 请确保已经安装了gcc automake autoconf m4 
+$sudo yum install gd-devel pcre-devel libcurl-devel 
 
 ```
 
 ### FreeBSD / NetBSD / OpenBSD
 ```
 
-不多说了，自己用port 把libcurl-dev libgd2-dev libpcre-dev 装上吧
-编译前请确保已经安装gcc automake autoconf m4 
+# 不多说了，自己用port 把libcurl-dev libgd2-dev libpcre-dev 装上吧
+# 编译前请确保已经安装gcc automake autoconf m4 
 ```
 
 ### Windows
 ```
-也支持的，不过要修改的代码太多了，包括Nginx本身，用VC++来编译
-嫌麻烦可以用cygwin来编译。还是不建议你这么做了，用Unix/Linux操作系统吧。
+# 也支持的，不过要修改的代码太多了，包括Nginx本身，用VC++来编译
+# 嫌麻烦可以用cygwin来编译。还是不建议你这么做了，用Unix/Linux操作系统吧。
 ```
 
 ###下载nginx / tengine 源代码
@@ -48,27 +49,27 @@
 
 ```
 # 下载Tengine
-#wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
-#tar -zxvf tengine-1.4.5.tar.gz
-#cd 解压后的目录
+$wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
+$tar -zxvf tengine-1.4.5.tar.gz
+$cd 解压后的目录
 ```
 
 ```
 # 下载Nginx
-#wget http://nginx.org/download/nginx-1.4.0.tar.gz
-#tar -zxvf nginx-1.4.0.tar.gz
-#cd 解压后的目录
+$wget http://nginx.org/download/nginx-1.4.0.tar.gz
+$tar -zxvf nginx-1.4.0.tar.gz
+$cd 解压后的目录
 ```
 
 ```
-#mkdir ./nginx_image_module
-#cd ./nginx_image_module
-#wget https://github.com/3078825/nginx-image/archive/master.zip
-#unzip master.zip
-#cd ..
-#./configure --add-module=./nginx_image_module
-#make
-#make install 
+$mkdir ./nginx_image_module
+$cd ./nginx_image_module
+$wget https://github.com/3078825/nginx-image/archive/master.zip
+$unzip master.zip
+$cd ..
+$./configure --add-module=./nginx_image_module
+$make
+$sudo make install 
 ```
 
 ## 配置方法
