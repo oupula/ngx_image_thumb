@@ -12,6 +12,7 @@ Nginx Image 模块
 编译前请确认您的系统已经安装了libcurl-dev  libgd2-dev  libjpeg-dev libpng-dev libpcre-dev 依赖库
 
 下载nginx / tengine 源代码
+
 然后下载本模块代码，并放置在nginx源代码的nginx_image_module目录下
 
 ./configure --add-module=./nginx_image_module
@@ -74,15 +75,44 @@ image_water_color 水印文字颜色,默认 #000000
 调用说明
 
 这里假设你的nginx 访问地址为 http://127.0.0.1/
-并在根目录存在一个 test.jpg的图片
+
+并在nginx网站根目录存在一个 test.jpg的图片
+
 通过访问 
-http://127.0.0.1/test.jpg!c300x200.jpg 将会生成test.jpg 300x200的缩略图
+
+http://127.0.0.1/test.jpg!c300x200.jpg 将会 生成/输出 test.jpg 300x200的缩略图
+
 其中c是生成图片缩略图的参数，300是生成缩略图的宽 200是生成缩略图的高
-一共可以生成三种类型的缩略图。
+
+一共可以生成四种类型的缩略图。
+
+c参数按请求宽高比例从图片高度10%处开始截取图片，然后缩放/放大到指定尺寸（图片缩略图大小等于请求的宽高）
+
+m参数按请求宽高比例居中截图图片，然后缩放/放大到指定尺寸（图片缩略图大小等于请求的宽高）
+
+t参数按请求宽高比例按比例缩放/放大到指定尺寸（图片缩略图大小可能小于请求的宽高)
+
+w参数按请求宽高比例缩放/放大到指定尺寸，空白处填充白色背景颜色（图片缩略图大小等于请求的宽高）
 
 
  
 调用举例
+
+http://127.0.0.1/test.jpg!c300x300.jpg
+
+http://127.0.0.1/test.jpg!t300x300.jpg
+
+http://127.0.0.1/test.jpg!m300x300.jpg
+
+http://127.0.0.1/test.jpg!w300x300.jpg
+
+http://127.0.0.1/test.c300x300.jpg
+
+http://127.0.0.1/test.t300x300.jpg
+
+http://127.0.0.1/test.m300x300.jpg
+
+http://127.0.0.1/test.w300x300.jpg
 
 
 
