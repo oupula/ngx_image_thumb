@@ -8,7 +8,8 @@ Nginx Image 模块
 ....等等
 
 
-编译方法 
+## 编译方法 
+
 编译前请确认您的系统已经安装了libcurl-dev  libgd2-dev  libjpeg-dev libpng-dev libpcre-dev 依赖库
 
 下载nginx / tengine 源代码
@@ -20,9 +21,9 @@ make
 make install 
 
 
-配置方法
+## 配置方法
 
-在
+# 在
 location / {
    root html;
    #添加以下配置
@@ -30,7 +31,7 @@ location / {
    image_output on;
 }
 
-或者指定目录开启 
+# 或者指定目录开启 
 location /upload {
    root html; 
    image on;
@@ -39,7 +40,7 @@ location /upload {
 
 
 
-其他参数说明：
+## 其他参数说明：
 
 image on/off 是否开启缩略图功能,默认关闭
 
@@ -72,7 +73,7 @@ image_water_font;//文字水印字体文件路径
 image_water_color 水印文字颜色,默认 #000000
 
 
-调用说明
+## 调用说明
 
 这里假设你的nginx 访问地址为 http://127.0.0.1/
 
@@ -96,7 +97,7 @@ w参数按请求宽高比例缩放/放大到指定尺寸，空白处填充白色
 
 
  
-调用举例
+## 调用举例
 
 http://127.0.0.1/test.jpg!c300x300.jpg
 
