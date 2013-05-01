@@ -15,11 +15,11 @@
 下载nginx / tengine 源代码
 
 然后下载本模块代码，并放置在nginx源代码的nginx_image_module目录下
-
-$./configure --add-module=./nginx_image_module
-$make
-$make install 
-
+```
+#./configure --add-module=./nginx_image_module
+#make
+#make install 
+```
 
 ## 配置方法
 
