@@ -9,7 +9,7 @@ Nginx Image 模块
 
 
 编译方法 
-编译前请确认您的系统已经安装了libcurl-dev  libgd2-dev  libjpeg-dev libpng-dev 等依赖库
+编译前请确认您的系统已经安装了libcurl-dev  libgd2-dev  libjpeg-dev libpng-dev libpcre-dev 依赖库
 
 下载nginx / tengine 源代码
 然后下载本模块代码，并放置在nginx源代码的nginx_image_module目录下
@@ -37,6 +37,7 @@ location /upload {
 }
 
 
+
 其他参数说明：
 
 image on/off 是否开启缩略图功能,默认关闭
@@ -54,6 +55,22 @@ image_water_text 水印文字 "Power By Vampire"
 image_water_font_size 水印大小 默认 5
 image_water_font;//文字水印字体文件路径
 image_water_color 水印文字颜色,默认 #000000
+
+
+调用说明
+
+这里假设你的nginx 访问地址为 http://127.0.0.1/
+并在根目录存在一个 test.jpg的图片
+通过访问 
+http://127.0.0.1/test.jpg!c300x200.jpg 将会生成test.jpg 300x200的缩略图
+其中c是生成图片缩略图的参数，300是生成缩略图的宽 200是生成缩略图的高
+一共可以生成三种类型的缩略图。
+
+
+ 
+调用举例
+
+
 
 
 
