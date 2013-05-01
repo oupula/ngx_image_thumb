@@ -1,6 +1,7 @@
 # Nginx Image 缩略图 模块 
 ##### QQ:3078825
-##### 邮箱:3078825#qq.com
+##### 邮箱:<3078825@qq.com>
+##### 网址:<http://www.oupula.org>
 
 
 ### 模块同时支持 Nginx 和 tengine
