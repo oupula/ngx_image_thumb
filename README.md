@@ -1,4 +1,27 @@
-nginx-image
-===========
+Nginx Image 模块
 
-Nginx Image Module
+本nginx模块主要功能是对请求的图片进行缩略/水印处理，支持文字水印和图片水印。
+支持自定义字体，文字大小，水印透明度，水印位置。
+判断原图是否是否大于指定尺寸才处理。
+
+
+
+nginx.conf 配置值
+* image on/off 是否开启缩略图功能,默认关闭
+* image_backend on/off 是否开启镜像服务
+* image_backend_server 镜像服务器地址
+* image_output on/off 是否不生成图片而直接处理后输出 默认off
+* image_jpeg_quality 75 生成JPEG图片的质量 默认值75
+* image_water on/off 是否开启水印功能
+* image_water_type 0/1 水印类型 0:图片水印 1:文字水印
+* image_water_min 300 300 图片宽度 300 高度 300 的情况才添加水印
+* image_water_pos 0-9 水印位置 默认值9 0为随机位置,1为顶端居左,2为顶端居中,3为顶端居右,4为中部居左,5为中部居中,6为中部居右,7为底端居左,8为底端居中,9为底端居右
+* image_water_file 水印文件(jpg/png/gif),绝对路径或者相对路径的水印图片
+* image_water_transparent 水印透明度,默认20
+* image_water_text 水印文字 "Power By Vampire"
+* image_water_font_size 水印大小 默认 5
+* image_water_font;//文字水印字体文件路径
+* image_water_color 水印文字颜色,默认 #000000
+
+
+
