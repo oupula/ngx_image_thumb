@@ -7,10 +7,10 @@
 
 ### Module Support Nginx And tengine
 
-- 本nginx模块主要功能是对请求的图片进行缩略/水印处理，支持文字水印和图片水印。
-- 支持自定义字体，文字大小，水印透明度，水印位置。
-- 判断原图是否是否大于指定尺寸才处理。
-....等等
+- This Nginx Image module is to request pictures abbreviated / watermark processing, support for text watermark and image watermark.
+- Support for custom font, text size, transparency of the watermark, the watermark position.
+- To determine whether the original image is larger than the specified size.
+.... 
 
 
 ## How To Builder SourceCode 
@@ -31,7 +31,7 @@ $ sudo yum install gd-devel pcre-devel libcurl-devel
 
 ### Download Nginx / Tengine Source Code
 
-#### DownLoad Nginx Image Module，并放置在nginx源代码的nginx_image_module目录下
+#### DownLoad Nginx Image Module，put under the nginx_image_module directory
 #### Nginx or Tengine . You can choose one between these.
 
 ```bash
@@ -69,6 +69,7 @@ vim /etc/nginx/nginx.conf
 ```
 
 In
+
 ```apache
 location / {
    root html;
@@ -78,7 +79,7 @@ location / {
 }
 ```
 
-Or
+Or use specified location
 
 ```apache
 location /upload {
@@ -92,35 +93,35 @@ location /upload {
 
 ## Configuration details：
 ```apache
-image on/off 是否开启缩略图功能,默认关闭
+image on/off  #turn on/off image thumbnail module,default off.
 
-image_backend on/off 是否开启镜像服务，当开启该功能时，请求目录不存在的图片（判断原图），将自动从镜像服务器地址下载原图
+image_backend on/off  #Mirror service is turn on/off, visit the picture url. if picture does not exist, will be automatically downloaded from the mirror server into local server , default off.
 
-image_backend_server 镜像服务器地址
+image_backend_server #Mirror server url.
 
-image_output on/off 是否不生成图片而直接处理后输出 默认off
+image_output on/off  #If On will not create picture thumbnail file , default off.
 
-image_jpeg_quality 75 生成JPEG图片的质量 默认值75
+image_jpeg_quality 75 #Create jpeg picture quality , default 75.
 
-image_water on/off 是否开启水印功能
+image_water on/off #open watermark function , default off.
 
-image_water_type 0/1 水印类型 0:图片水印 1:文字水印
+image_water_type 0/1 #Type of watermark 0: Image watermark  1: text watermark.
 
-image_water_min 300 300 图片宽度 300 高度 300 的情况才添加水印
+image_water_min 300 300 #source picture small than width:300 Height:300 will not add watermark.
 
-image_water_pos 0-9 水印位置 默认值9 0为随机位置,1为顶端居左,2为顶端居中,3为顶端居右,4为中部居左,5为中部居中,6为中部居右,7为底端居左,8为底端居中,9为底端居右
+image_water_pos 0-9 #watermark position , 0 for a random positin, 1 for the top ranking left, 2 centered in the top , 3 for the top ranking right, 4 Central left, 5 Middle center, 6 Central habitat right, 7 bottom of the left, 8 centered at the bottom ,9 bottom of the right.
 
-image_water_file 水印文件(jpg/png/gif),绝对路径或者相对路径的水印图片
+image_water_file #watermark filename (jpg/png/gif), absolute or relative path of the watermark image.
 
-image_water_transparent 水印透明度,默认20
+image_water_transparent #transparency of the watermark, default 20.
 
-image_water_text 水印文字 "Power By Vampire"
+image_water_text #watermark text , default "Power By Vampire".
 
-image_water_font_size 水印大小 默认 5
+image_water_font_size #watermark text size, default 5.
 
-image_water_font 文字水印字体文件路径
+image_water_font #use special font to make watermark , absolute or relative path of fontname. 
 
-image_water_color 水印文字颜色,默认 #000000
+image_water_color #watermakr text font color , default #000000
 ```
 
 ## How To use
@@ -132,7 +133,7 @@ Put a picture named `test.jpg` into nginx website root path
 
 Visit `http://127.0.0.1/test.jpg!c300x200.jpg` nginx/tengine will auto  create/output   `test.jpg` **300x200** thumbnail picture
 
-In **c** parameter is thumbnail type， **300** is thumbnail picture width size     **200** is thumbnail picture height size
+In **c** parameter is type of thumbnail， **300** is thumbnail picture width size     **200** is thumbnail picture height size
 
 Support Create / output **Four**type thumbnail Picture。
 
