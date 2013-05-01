@@ -103,21 +103,21 @@ w参数按请求宽高比例缩放/放大到指定尺寸，空白处填充白色
  
 ## 调用举例
 
--http://127.0.0.1/test.jpg!c300x300.jpg
+- http://127.0.0.1/test.jpg!c300x300.jpg
 
--http://127.0.0.1/test.jpg!t300x300.jpg
+- http://127.0.0.1/test.jpg!t300x300.jpg
 
--http://127.0.0.1/test.jpg!m300x300.jpg
+- http://127.0.0.1/test.jpg!m300x300.jpg
 
--http://127.0.0.1/test.jpg!w300x300.jpg
+- http://127.0.0.1/test.jpg!w300x300.jpg
 
--http://127.0.0.1/test.c300x300.jpg
+- http://127.0.0.1/test.c300x300.jpg
 
--http://127.0.0.1/test.t300x300.jpg
+- http://127.0.0.1/test.t300x300.jpg
 
--http://127.0.0.1/test.m300x300.jpg
+- http://127.0.0.1/test.m300x300.jpg
 
--http://127.0.0.1/test.w300x300.jpg
+- http://127.0.0.1/test.w300x300.jpg
 
 
 
