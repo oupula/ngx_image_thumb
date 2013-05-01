@@ -10,7 +10,30 @@
 
 ## 编译方法 
 
-编译前请确认您的系统已经安装了libcurl-dev  libgd2-dev  libjpeg-dev libpng-dev libpcre-dev 依赖库
+编译前请确认您的系统已经安装了libcurl-dev  libgd2-dev  libpcre-dev 依赖库
+
+### Debian / Ubuntu 系统举例
+```
+#apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
+```
+
+### CentOS /RedHat / Fedora
+```
+
+#yum install gd-devel pcre-devel libcurl-devel 
+
+```
+
+### FreeBSD / NetBSD / OpenBSD
+```
+不多说了，自己用port 把libcurl-dev libgd2-dev libpcre-dev 装上吧
+```
+
+### Windows
+```
+也支持的，不过要修改的代码太多了，包括Nginx本身，用VC++来编译
+嫌麻烦可以用cygwin来编译。还是不建议你这么做了，用Unix/Linux操作系统吧。
+```
 
 下载nginx / tengine 源代码
 
