@@ -1,6 +1,6 @@
-## Nginx Image 模块 
+# Nginx Image 模块 
 
-# 模块同时支持 Nginx 和 tengine
+### 模块同时支持 Nginx 和 tengine
 
 -本nginx模块主要功能是对请求的图片进行缩略/水印处理，支持文字水印和图片水印。
 -支持自定义字体，文字大小，水印透明度，水印位置。
