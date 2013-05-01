@@ -4,7 +4,7 @@
 ##### 网址:<http://www.oupula.org>
 
 
-##### Readme for english <https://github.com/3078825/nginx-image/blob/master/README_EN.md> 
+##### Readme for english : <https://github.com/3078825/nginx-image/blob/master/README_EN.md> 
 ####### My english so bad , you know.
 
 
