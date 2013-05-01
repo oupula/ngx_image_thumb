@@ -14,19 +14,22 @@
 
 ### Debian / Ubuntu 系统举例
 ```
+#apt-get install build-essential m4 autoconf automake make #如果你没有安装GCC相关环境才需要执行
 #apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
 ```
 
 ### CentOS /RedHat / Fedora
 ```
-
+#请确保已经安装了gcc automake autoconf m4 
 #yum install gd-devel pcre-devel libcurl-devel 
 
 ```
 
 ### FreeBSD / NetBSD / OpenBSD
 ```
+
 不多说了，自己用port 把libcurl-dev libgd2-dev libpcre-dev 装上吧
+编译前请确保已经安装gcc automake autoconf m4 
 ```
 
 ### Windows
@@ -39,6 +42,20 @@
 
 然后下载本模块代码，并放置在nginx源代码的nginx_image_module目录下
 ```
+#wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
+#tar -zxvf tengine-1.4.5.tar.gz
+#cd 解压后的目录
+```
+
+####选Nginx还是Tengine,您自己看,两者选其一
+
+```
+#wget http://nginx.org/download/nginx-1.4.0.tar.gz
+#tar -zxvf nginx-1.4.0.tar.gz
+#cd 解压后的目录
+```
+
+···
 #./configure --add-module=./nginx_image_module
 #make
 #make install 
