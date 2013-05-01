@@ -26,12 +26,10 @@ $ sudo apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
 ```bash
 # 请确保已经安装了gcc automake autoconf m4 
 $ sudo yum install gd-devel pcre-devel libcurl-devel 
-
 ```
 
 ### FreeBSD / NetBSD / OpenBSD
 ```
-
 # 不多说了，自己用port 把libcurl-dev libgd2-dev libpcre-dev 装上吧
 # 编译前请确保已经安装gcc automake autoconf m4 
 ```
