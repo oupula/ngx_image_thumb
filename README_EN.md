@@ -49,12 +49,10 @@ $ cd nginx-1.4.0
 ```
 
 ```bash
-$ mkdir ./nginx_image_module
-$ cd ./nginx_image_module
 $ wget https://github.com/3078825/nginx-image/archive/master.zip
 $ unzip master.zip
 $ cd ..
-$ ./configure --add-module=./nginx_image_module
+$ ./configure --add-module=./nginx-image-master
 $ make
 $ sudo make install 
 ```
