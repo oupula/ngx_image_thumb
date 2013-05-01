@@ -50,23 +50,20 @@ $ sudo yum install gd-devel pcre-devel libcurl-devel
 # 下载Tengine
 $ wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
 $ tar -zxvf tengine-1.4.5.tar.gz
-$ cd 解压后的目录
+$ cd tengine-1.4.5
 ```
 
 ```bash
 # 下载Nginx
 $ wget http://nginx.org/download/nginx-1.4.0.tar.gz
 $ tar -zxvf nginx-1.4.0.tar.gz
-$ cd 解压后的目录
+$ cd nginx-1.4.0
 ```
 
 ```bash
-$ mkdir ./nginx_image_module
-$ cd ./nginx_image_module
 $ wget https://github.com/3078825/nginx-image/archive/master.zip
 $ unzip master.zip
-$ cd ..
-$ ./configure --add-module=./nginx_image_module
+$ ./configure --add-module=./nginx-image-master
 $ make
 $ sudo make install 
 ```
