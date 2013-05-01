@@ -7,10 +7,8 @@
 
 ### Module Support Nginx And tengine
 
-- This Nginx Image module is to request pictures abbreviated / watermark processing, support for text watermark and image watermark.
-- Support for custom font, text size, transparency of the watermark, the watermark position.
-- To determine whether the original image is larger than the specified size.
-.... 
+- This Nginx Image module is auto create / output picture thumbnail, support for text watermark and image watermark.
+- Support for custom font, text size, transparency of the watermark, the watermark position... 
 
 
 ## How To Builder SourceCode 
@@ -92,7 +90,7 @@ location /upload {
 ```apache
 image on/off  #turn on/off image thumbnail module,default off.
 
-image_backend on/off  #Mirror service is turn on/off, visit the picture url. if picture does not exist, will be automatically downloaded from the mirror server into local server , default off.
+image_backend on/off  #Mirror service is turn on/off, visit the picture url. if picture file does not exist, will be automatically downloaded from the mirror server into local server , default off.
 
 image_backend_server #Mirror server url.
 
@@ -137,13 +135,13 @@ Support Create / output **Four**type thumbnail Picture。
 Support JPEG / PNG / GIF {not animation}
 
 
-**C** parameter requesting the aspect ratio from  **10%**  at the height of the image start capturing images, and zoom (in / out) to the specified size（ **Picture thumbnail size equal the request size** ）
+**C** parameter is aspect ratio from  **10%**  at the height of the image start capturing images, and zoom (in / out) to the specified size（ **Picture thumbnail size equal the request size** ）
  
-**M** Parameter requesting an aspect ratio of center screenshot picture, and then zoom (in / out) to the specified size（ **Picture thumbnail size equal the request size** ）
+**M** Parameter is aspect ratio of center screenshot picture, and then zoom (in / out) to the specified size（ **Picture thumbnail size equal the request size** ）
 
-**T** parameters requesting aspect ratio scaling / zoom (in / out) to the specified size（ **Picture thumbnail size maybe small than request size** )
+**T** parameters is aspect ratio scaling / zoom (in / out) to the specified size（ **Picture thumbnail size maybe small than request size** )
 
-**W** parameter requests aspect ratio scaling / zoom (in / out) to the specified size, fill in the white background color（ **Picture thumbnail size equal the request size** ）
+**W** parameter is aspect ratio scaling / zoom (in / out) to the specified size, fill in the white background color（ **Picture thumbnail size equal the request size** ）
 
 
  
