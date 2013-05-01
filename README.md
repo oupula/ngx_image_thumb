@@ -1,4 +1,4 @@
-# Nginx Image 模块 
+# Nginx Image 缩略图 模块 
 ##### QQ:3078825
 ##### 邮箱:3078825#qq.com
 
@@ -127,7 +127,7 @@ image_water_text 水印文字 "Power By Vampire"
 
 image_water_font_size 水印大小 默认 5
 
-image_water_font;//文字水印字体文件路径
+image_water_font 文字水印字体文件路径
 
 image_water_color 水印文字颜色,默认 #000000
 ```
