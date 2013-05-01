@@ -18,14 +18,14 @@
 ### Debian / Ubuntu 系统举例
 ```bash
 # 如果你没有安装GCC相关环境才需要执行
-$sudo apt-get install build-essential m4 autoconf automake make 
-$sudo apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
+$ sudo apt-get install build-essential m4 autoconf automake make 
+$ sudo apt-get install libgd2-noxpm-dev libcurl4-openssl-dev libpcre3-dev
 ```
 
 ### CentOS /RedHat / Fedora
 ```bash
 # 请确保已经安装了gcc automake autoconf m4 
-$sudo yum install gd-devel pcre-devel libcurl-devel 
+$ sudo yum install gd-devel pcre-devel libcurl-devel 
 
 ```
 
@@ -49,27 +49,27 @@ $sudo yum install gd-devel pcre-devel libcurl-devel
 
 ```bash
 # 下载Tengine
-$wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
-$tar -zxvf tengine-1.4.5.tar.gz
-$cd 解压后的目录
+$ wget http://tengine.taobao.org/download/tengine-1.4.5.tar.gz
+$ tar -zxvf tengine-1.4.5.tar.gz
+$ cd 解压后的目录
 ```
 
 ```bash
 # 下载Nginx
-$wget http://nginx.org/download/nginx-1.4.0.tar.gz
-$tar -zxvf nginx-1.4.0.tar.gz
-$cd 解压后的目录
+$ wget http://nginx.org/download/nginx-1.4.0.tar.gz
+$ tar -zxvf nginx-1.4.0.tar.gz
+$ cd 解压后的目录
 ```
 
 ```bash
-$mkdir ./nginx_image_module
-$cd ./nginx_image_module
-$wget https://github.com/3078825/nginx-image/archive/master.zip
-$unzip master.zip
-$cd ..
-$./configure --add-module=./nginx_image_module
-$make
-$sudo make install 
+$ mkdir ./nginx_image_module
+$ cd ./nginx_image_module
+$ wget https://github.com/3078825/nginx-image/archive/master.zip
+$ unzip master.zip
+$ cd ..
+$ ./configure --add-module=./nginx_image_module
+$ make
+$ sudo make install 
 ```
 
 ## 配置方法
@@ -138,20 +138,20 @@ image_water_color 水印文字颜色,默认 #000000
 
 通过访问 
 
-http://127.0.0.1/test.jpg!c300x200.jpg 将会 生成/输出 `test.jpg` **300x200**的缩略图
+http://127.0.0.1/test.jpg!c300x200.jpg 将会 生成/输出 `test.jpg` **300x200** 的缩略图
 
-其中**c**是生成图片缩略图的参数，**300**是生成缩略图的宽 **200**是生成缩略图的高
+其中**c**是生成图片缩略图的参数，**300** 是生成缩略图的宽 **200** 是生成缩略图的高
 
 一共可以生成四种类型的缩略图。
 
 
-**c** 参数按请求宽高比例从图片高度*10%*处开始截取图片，然后缩放/放大到指定尺寸（**图片缩略图大小等于请求的宽高**）
+**C** 参数按请求宽高比例从图片高度*10%*处开始截取图片，然后缩放/放大到指定尺寸（ **图片缩略图大小等于请求的宽高** ）
+ 
+**M** 参数按请求宽高比例居中截图图片，然后缩放/放大到指定尺寸（ **图片缩略图大小等于请求的宽高** ）
 
-**m** 参数按请求宽高比例居中截图图片，然后缩放/放大到指定尺寸（**图片缩略图大小等于请求的宽高**）
+**T** 参数按请求宽高比例按比例缩放/放大到指定尺寸（ **图片缩略图大小可能小于请求的宽高** )
 
-**t** 参数按请求宽高比例按比例缩放/放大到指定尺寸（**图片缩略图大小可能小于请求的宽高**)
-
-**w** 参数按请求宽高比例缩放/放大到指定尺寸，空白处填充白色背景颜色（**图片缩略图大小等于请求的宽高**）
+**W** 参数按请求宽高比例缩放/放大到指定尺寸，空白处填充白色背景颜色（ **图片缩略图大小等于请求的宽高** ）
 
 
  
