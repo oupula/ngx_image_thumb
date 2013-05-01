@@ -4,6 +4,10 @@
 ##### 网址:<http://www.oupula.org>
 
 
+##### Readme for english <https://github.com/3078825/nginx-image/blob/master/README_EN.md> 
+####### My english so bad , you know.
+
+
 ### 模块同时支持 Nginx 和 tengine
 
 - 本nginx模块主要功能是对请求的图片进行缩略/水印处理，支持文字水印和图片水印。
@@ -143,6 +147,8 @@ image_water_color 水印文字颜色,默认 #000000
 其中 **c** 是生成图片缩略图的参数， **300** 是生成缩略图的 **宽度**      **200** 是生成缩略图的 **高度** 
 
 一共可以生成**四**种不同类型的缩略图。
+
+支持 jpeg / png / gif (Gif生成后变成静态图片)
 
 
 **C** 参数按请求宽高比例从图片高度 **10%** 处开始截取图片，然后缩放/放大到指定尺寸（ **图片缩略图大小等于请求的宽高** ）
