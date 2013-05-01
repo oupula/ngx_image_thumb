@@ -71,8 +71,12 @@ $ sudo make install
 ```
 
 ## 配置方法
+
+打开 `nginx.conf` 
+
 ```bash
-vim `nginx.conf` 
+vim /etc/nginx/nginx.conf 
+# 该路径为默认路径，如果不在此处，自己找一下
 ```
 
 在
