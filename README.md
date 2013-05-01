@@ -73,6 +73,9 @@ $sudo make install
 ```
 
 ## 配置方法
+```
+vim nginx.conf 
+```
 
 在
 ```
