@@ -126,11 +126,11 @@ If your nginx bind `127.0.0.1`
 Put a picture named `test.jpg` into nginx website root path
 
 
-Visit `http://127.0.0.1/test.jpg!c300x200.jpg` nginx/tengine will auto  create/output   `test.jpg` **300x200** thumbnail picture
+Visit `http://127.0.0.1/test.jpg!c300x200.jpg` nginx/tengine will auto  create/output   `test.jpg` **width:300 height:200** thumbnail picture
 
 In **c** parameter is type of thumbnail， **300** is thumbnail picture width size     **200** is thumbnail picture height size
 
-Support Create / output **Four**type thumbnail Picture。
+Support create / output **Four** type thumbnail Picture。
 
 Support JPEG / PNG / GIF {not animation}
 
