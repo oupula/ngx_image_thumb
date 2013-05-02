@@ -11,7 +11,7 @@
 - Support for custom font, text size, transparency of the watermark, the watermark position... 
 
 
-## How To Builder SourceCode 
+## How To Build SourceCode 
 
 Module Require libcurl-dev  libgd2-dev  libpcre-dev Library Code
 
