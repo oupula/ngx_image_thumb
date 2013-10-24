@@ -885,30 +885,21 @@ static int calc_image_info(void *conf)
 			}
 			else if(stricmp(info->m_type,"w") == 0)
 			{
-				if( (info->max_width >= info->src_width) || (info->max_height >= info->src_height ))
+				info->w_margin = 1;
+				if((double)info->src_width/info->src_height >= (double) info->max_width / info->max_height)
 				{
-					info->w_margin = 1;
-					if((double)info->src_width/info->src_height >= (double) info->max_width / info->max_height)
-					{
-						info->height=info->width * info->src_height/info->src_width;
-						info->src_h=info->src_w * info->height / info->width;
-						info->src_y=(info->src_height - info->src_h) / 2;
-					}
-					else
-					{
-						info->width=info->max_height * info->src_width / info->src_height;
-						info->src_w=info->width * info->src_height / info->height;
-						info->src_x=(info->src_width - info->src_w)/2;
-					}
-                    			info->dst_x = (float)((float)(info->max_width - info->width)/2);
-                    			info->dst_y = (float)((float)(info->max_height - info->height)/2);
+					info->height=info->width * info->src_height/info->src_width;
+					info->src_h=info->src_w * info->height / info->width;
+					info->src_y=(info->src_height - info->src_h) / 2;
 				}
-                    		else
-                		{
-                			info->w_margin = 0;
-                    			info->width = info->max_width;
-                    			info->height = (float)info->src_height * ((float)info->max_width/info->src_width);
-                		}
+				else
+				{
+					info->width=info->max_height * info->src_width / info->src_height;
+					info->src_w=info->width * info->src_height / info->height;
+					info->src_x=(info->src_width - info->src_w)/2;
+				}
+                    		info->dst_x = (float)((float)(info->max_width - info->width)/2);
+                    		info->dst_y = (float)((float)(info->max_height - info->height)/2);
                 		
 			}
 			else
