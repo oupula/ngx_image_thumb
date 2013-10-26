@@ -564,9 +564,9 @@ static void make_thumb(void *conf)
     {
 
 		info->w_im = gdImageCreateTrueColor(info->width,info->height);
-        	//info->dst_im = gdImageCreateTrueColor(info->src_width,info->src_height);
+		gdImageFilledRectangle(info->w_im, 0, 0, info->width,info->height, gdImageColorAllocate(info->w_im, 255, 255, 255));
         	info->dst_im = gdImageCreateTrueColor(info->max_width,info->max_height);
-        	gdImageFilledRectangle(info->dst_im, 0, 0, info->src_width,info->src_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
+        	gdImageFilledRectangle(info->dst_im, 0, 0, info->max_width,info->max_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
 		gdImageCopyResampled(info->w_im, info->src_im, 0, 0, info->src_x, info->src_y,info->width, info->height, info->src_w,info->src_h);
 		gdImageCopyResampled(info->dst_im, info->w_im, info->dst_x,info->dst_y, 0, 0,info->width, info->height, info->width, info->height);
     }
