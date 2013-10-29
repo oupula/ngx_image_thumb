@@ -1,6 +1,6 @@
 # Nginx Image 缩略图 模块 
-##### QQ:3078825
-##### 邮箱:<3078825@qq.com>
+
+##### 邮箱:<oopul@msn.com>
 ##### 网址:<http://www.oupula.org>
 
 
