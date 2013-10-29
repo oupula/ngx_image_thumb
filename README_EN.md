@@ -1,7 +1,7 @@
 # Nginx Image Thumbnail Module
 
 
-##### EMail:<3078825@qq.com>
+##### EMail:<oopul@msn.com>
 ##### Website:<http://www.oupula.org>
 
 
