@@ -391,36 +391,28 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 			{
 
 				make_thumb(conf);//生成图片缩略图
-
 				water_mark(conf);//图片打上水印
-
 				thumb_to_string(conf);//GD对象转换成二进制字符串
 				if(conf->image_output == 0)
 				{
 
 					write_img(conf);//保存图片缩略图到文件
 				}
-				else
+				if(conf->src_im != NULL){
+					gdImageDestroy(conf->src_im);
+				}
+				if(conf->dst_im != NULL)
 				{
-
+					gdImageDestroy(conf->dst_im);
+				}
+				if(conf->w_margin > 0 && conf->w_im != NULL)
+				{
+			        	gdImageDestroy(conf->w_im);//释放补白边的对象
+				}
+				if(conf->image_output == 1)
+				{
 					return output(r,conf,ngx_http_image_types[conf->dest_type]);
 				}
-			}
-			if(conf->img_data != NULL)
-			{
-				gdFree(conf->img_data);
-			}
-			if(conf->dst_im != NULL)
-			{
-				gdImageDestroy(conf->src_im);
-				gdImageDestroy(conf->dst_im);
-			}
-			if(conf->w_margin > 0)
-			{
-                    if(conf->w_im != NULL)
-                    {
-                    			gdImageDestroy(conf->w_im);//释放补白边的对象
-	     			}
 			}
 		}
 	}
@@ -515,6 +507,10 @@ static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 	ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
 	cv.value.len = info->img_size;
 	cv.value.data = (u_char *)info->img_data;
+	if(conf->img_data != NULL)
+	{
+		gdFree(conf->img_data);
+	}
 	return ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
 }
 
@@ -814,10 +810,10 @@ static int calc_image_info(void *conf)
 	info->src_type = get_ext_header(info->source_file);//读取原图头部信息金星判断图片格式
 	if( info->src_type > 0)
 	{
-        info->w_margin = 0;//设置默认图片不补白边
+        	info->w_margin = 0;//设置默认图片不补白边
 		info->src_im = NULL;
 		info->dst_im = NULL;
-        info->w_im = NULL;
+        	info->w_im = NULL;
 		image_from(conf);//读取原图图片到GD对象
 		if(info->src_im != NULL)
 		{
@@ -908,11 +904,10 @@ static int calc_image_info(void *conf)
 				gdImageDestroy(info->src_im);
 				return -1;
 			}
-
+			gdImageDestroy(info->src_im);
 			return 0;
 		}
 	}
-	gdImageDestroy(info->src_im);
 	return -1;
 }
 
@@ -1072,15 +1067,15 @@ static void image_from(void * conf)
 	{
 		switch(info->src_type)
 		{
-		case NGX_IMAGE_GIF:
-			info->src_im = gdImageCreateFromGifPtr(size,buffer);
-			break;
-		case NGX_IMAGE_JPEG:
-			info->src_im = gdImageCreateFromJpegPtr(size,buffer);
-			break;
-		case NGX_IMAGE_PNG:
-			info->src_im = gdImageCreateFromPngPtr(size,buffer);
-			break;
+			case NGX_IMAGE_GIF:
+				info->src_im = gdImageCreateFromGifPtr(size,buffer);
+				break;
+			case NGX_IMAGE_JPEG:
+				info->src_im = gdImageCreateFromJpegPtr(size,buffer);
+				break;
+			case NGX_IMAGE_PNG:
+				info->src_im = gdImageCreateFromPngPtr(size,buffer);
+				break;
 		}
 		free(buffer);
 		return;
