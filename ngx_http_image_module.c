@@ -974,26 +974,24 @@ static int get_ext_header(char *filename)
 	else
 	{
 		unsigned short filetype;//bmp 0x4D42
-		if(fread(&filetype, sizeof(unsigned short), 1, handle))
-		{
-			if( filetype == 0xD8FF)
-			{
-				return NGX_IMAGE_JPEG;
-			}
-			else if( filetype == 0x4947)
-			{
-				return NGX_IMAGE_GIF;
-			}
-			else if( filetype == 0x5089)
-			{
-				return NGX_IMAGE_PNG;
-			}
-			else
-			{
-				return NGX_IMAGE_NONE;
-			}
-		}
+		fread(&filetype, sizeof(unsigned short), 1, handle);
 		fclose(handle);
+		if( filetype == 0xD8FF)
+		{
+			return NGX_IMAGE_JPEG;
+		}
+		else if( filetype == 0x4947)
+		{
+			return NGX_IMAGE_GIF;
+		}
+		else if( filetype == 0x5089)
+		{
+			return NGX_IMAGE_PNG;
+		}
+		else
+		{
+			return NGX_IMAGE_NONE;
+		}
 	}
 	return NGX_IMAGE_NONE;
 }
