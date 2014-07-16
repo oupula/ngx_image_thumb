@@ -775,8 +775,10 @@ static int parse_image_info(void *conf)
 			info->m_type = info->buffer[3];
 			info->max_width = atoi(info->buffer[4]);
 			info->max_height = atoi(info->buffer[5]);
-			info->max_width = (info->max_width) > 2000 ? 2000 : (info->max_width);
-			info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
+			info->max_width = (info->max_width > 2000) ? 2000 : info->max_width;
+                        info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
+                        info->max_width = (info->max_width <= 10) ? 10 : info->max_width;
+                        info->max_height = (info->max_height <= 10) ? 10 : info->max_height;
 			//printf("source_file:%s\n",info->source_file);
 			if(file_exists(info->source_file) == -1)//原图不存在
 			{
