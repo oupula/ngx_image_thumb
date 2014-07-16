@@ -395,7 +395,6 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 				thumb_to_string(conf);//GD对象转换成二进制字符串
 				if(conf->image_output == 0)
 				{
-
 					write_img(conf);//保存图片缩略图到文件
 				}
 				if(conf->src_im != NULL){
@@ -506,7 +505,7 @@ static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 	ngx_http_complex_value_t  cv;
 	ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
 	cv.value.len = info->img_size;
-	cv.value.data = (u_char *)info->img_data;//conf->img_data will be free?
+	cv.value.data = (u_char *)info->img_data;
 	return ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
 }
 
@@ -696,7 +695,6 @@ static void water_mark(void *conf)
 			gdImageCopy(tmp_im, info->water_im, 0, 0, 0, 0, water_w, water_h);
 			gdImageCopyMerge(info->dst_im, tmp_im,posX, posY, 0, 0, water_w,water_h,info->water_transparent);
 			gdImageDestroy(tmp_im);
-			gdImageDestroy(info->water_im);
 		}
 		else
 		{
@@ -704,6 +702,7 @@ static void water_mark(void *conf)
 			gdImageSaveAlpha(info->dst_im,0);
 			gdImageStringFT(info->dst_im,0,water_color,water_font,info->water_font_size, 0.0, posX, posY,water_text);
 		}
+		gdImageDestroy(info->water_im);
 	}
 }
 
@@ -897,10 +896,8 @@ static int calc_image_info(void *conf)
 			}
 			else
 			{
-				gdImageDestroy(info->src_im);
 				return -1;
 			}
-			gdImageDestroy(info->src_im);
 			return 0;
 		}
 	}
