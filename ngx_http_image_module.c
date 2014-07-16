@@ -404,6 +404,10 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 				{
 					gdImageDestroy(conf->dst_im);
 				}
+				if(conf->water_im != NULL)
+				{
+					gdImageDestroy(info->water_im);
+				}
 				if(conf->w_margin > 0 && conf->w_im != NULL)
 				{
 			        	gdImageDestroy(conf->w_im);//释放补白边的对象
@@ -702,7 +706,6 @@ static void water_mark(void *conf)
 			gdImageSaveAlpha(info->dst_im,0);
 			gdImageStringFT(info->dst_im,0,water_color,water_font,info->water_font_size, 0.0, posX, posY,water_text);
 		}
-		gdImageDestroy(info->water_im);
 	}
 }
 
