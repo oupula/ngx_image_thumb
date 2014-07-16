@@ -777,8 +777,13 @@ static int parse_image_info(void *conf)
 			info->max_height = atoi(info->buffer[5]);
 			info->max_width = (info->max_width > 2000) ? 2000 : info->max_width;
                         info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
-                        info->max_width = (info->max_width <= 10) ? 10 : info->max_width;
-                        info->max_height = (info->max_height <= 10) ? 10 : info->max_height;
+                        if(info->max_width <= 0 || info->max_height <=0 ){
+                        	//如果图片小于等于0，则可以判断请求无效了
+                        	pcre_free(expr);
+				pcre_malloc = old_pcre_malloc;
+				pcre_free = old_pcre_free;
+                        	return -1;
+                        }
 			//printf("source_file:%s\n",info->source_file);
 			if(file_exists(info->source_file) == -1)//原图不存在
 			{
