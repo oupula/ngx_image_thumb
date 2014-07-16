@@ -506,11 +506,7 @@ static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 	ngx_http_complex_value_t  cv;
 	ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
 	cv.value.len = info->img_size;
-	cv.value.data = (u_char *)info->img_data;
-	if(conf->img_data != NULL)
-	{
-		gdFree(conf->img_data);
-	}
+	cv.value.data = (u_char *)info->img_data;//conf->img_data will be free?
 	return ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
 }
 
