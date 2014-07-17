@@ -406,7 +406,7 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 				}
 				if(conf->water_im != NULL)
 				{
-					gdImageDestroy(info->water_im);
+					gdImageDestroy(conf->water_im);
 				}
 				if(conf->w_margin > 0 && conf->w_im != NULL)
 				{
