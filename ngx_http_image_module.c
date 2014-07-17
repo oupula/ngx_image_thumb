@@ -779,8 +779,8 @@ static int parse_image_info(void *conf)
 			info->max_width = atoi(info->buffer[4]);
 			info->max_height = atoi(info->buffer[5]);
 			info->max_width = (info->max_width > 2000) ? 2000 : info->max_width;
-                        info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
-                        if(info->max_width <= 0 || info->max_height <=0 ){
+			info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
+			if(info->max_width <= 0 || info->max_height <=0 ){
                         	//如果图片小于等于0，则可以判断请求无效了
                         	pcre_free(expr);
 				pcre_malloc = old_pcre_malloc;
