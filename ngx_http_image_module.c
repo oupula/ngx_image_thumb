@@ -400,7 +400,10 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 				}
 				if(conf->image_output == 1)
 				{
-					return output(r,conf,ngx_http_image_types[conf->dest_type]);
+					ngx_int_t status;
+                                        status = output(r,conf,ngx_http_image_types[conf->dest_type]);
+                                        gd_cleanup(conf);
+                                        return status;
 				}
 			}
 		}
@@ -491,15 +494,12 @@ ngx_http_image(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 {
-	ngx_int_t status;
 	ngx_image_conf_t *info = conf;
 	ngx_http_complex_value_t  cv;
 	ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
 	cv.value.len = info->img_size;
 	cv.value.data = (u_char *)info->img_data;
-	status = ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
-	gd_cleanup(info);
-	return status;
+	return ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
 }
 
 static void thumb_to_string(void *conf)
