@@ -46,7 +46,7 @@
 
 typedef struct
 {
-  ngx_flag_t image_status;//是否打开图片处理
+    ngx_flag_t image_status;//是否打开图片处理
 	char * url;//请求URL地址
 	char * request_dir;//URL目录
 	char * request_source;//URL源文件URL
@@ -56,7 +56,7 @@ typedef struct
 	char * m_type;//生成缩略图的方式 缩放/居中缩放/顶部10%开始缩放
 	char * source_file;//原始图片路径
 	char * dest_file;//目标图片路径
-	char * img_data;//图片内容
+	u_char * img_data;//图片内容
 	char buffer[6][255];
 	gdImagePtr src_im;//原始图片GD对象
 	gdImagePtr dst_im;//目标图片GD对象
@@ -116,6 +116,7 @@ static ngx_uint_t ngx_http_image_value(ngx_str_t *value);
 char * ngx_conf_set_number_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 char * ngx_conf_set_string_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type);
+static void gd_clean_data(void *data);//清除GD DATA数据
 static void gd_cleanup(void *conf);//清除GD对象
 static void make_thumb(void *conf);//创建GD对象缩略图,缩略图在此函数中已经处理好,但没有写入到文件
 static void water_mark(void *conf);//给图片打上水印
@@ -400,12 +401,7 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 				}
 				if(conf->image_output == 1)
 				{
-					ngx_int_t status;
-                                        status = output(r,conf,ngx_http_image_types[conf->dest_type]);
-                                        //这里处理不好，图片未发送完成下面做了GD对象清理处理，导致图片输出不完整，怎么办？
-                                        //todo 处理好这个问题
-                                        gd_cleanup(conf);
-                                        return status;
+					return output(r,conf,ngx_http_image_types[conf->dest_type]);
 				}
 			}
 		}
@@ -496,32 +492,49 @@ ngx_http_image(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 {
+    ngx_int_t status;
 	ngx_image_conf_t *info = conf;
 	ngx_http_complex_value_t  cv;
+    ngx_pool_cleanup_t            *cln;
+    cln = ngx_pool_cleanup_add(r->pool, 0);
+    if (cln == NULL) {
+        gdFree(info->img_data);
+        return status;
+    }
+    cln->handler = gd_clean_data;
+    cln->data = info->img_data;
+
 	ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
 	cv.value.len = info->img_size;
 	cv.value.data = (u_char *)info->img_data;
-	return ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
+    status = ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
+    gd_cleanup(conf);
+    return status;
 }
 
 static void thumb_to_string(void *conf)
 {
 	ngx_image_conf_t *info = conf;
+
 	switch(info->dest_type)
 	{
-	case NGX_IMAGE_PNG:
-		info->img_data = (char *)gdImagePngPtr(info->dst_im,&info->img_size);
-		break;
-	case NGX_IMAGE_GIF:
-		info->img_data = (char *)gdImageGifPtr(info->dst_im,&info->img_size);
-		break;
-	case NGX_IMAGE_JPEG:
-		info->img_data = (char *)gdImageJpegPtr(info->dst_im,&info->img_size,info->jpeg_quality);
-		break;
-	default:
-		return;
-		break;
-	}
+        case NGX_IMAGE_PNG:
+            info->img_data = gdImagePngPtr(info->dst_im,&info->img_size);
+            break;
+        case NGX_IMAGE_GIF:
+            info->img_data = gdImageGifPtr(info->dst_im,&info->img_size);
+            break;
+        case NGX_IMAGE_JPEG:
+            info->img_data = gdImageJpegPtr(info->dst_im,&info->img_size,info->jpeg_quality);
+            break;
+        default:
+            return;
+            break;
+    }
+}
+
+static void gd_clean_data(void *data){
+    gdFree(data);
 }
 
 static void gd_cleanup(void *conf){
@@ -539,9 +552,6 @@ static void gd_cleanup(void *conf){
 	if(info->w_margin > 0 && info->w_im != NULL)
 	{
 		gdImageDestroy(info->w_im);//释放补白边的对象
-	}
-	if(info->img_data != NULL){
-		gdFree(info->img_data);
 	}
 }
 
@@ -1020,6 +1030,7 @@ static void write_img(void * conf)
 		fwrite(info->img_data,sizeof(char),info->img_size,fp);
 		fclose(fp);
 	}
+    gdFree(info->img_data);
 	gd_cleanup(info);
 }
 
