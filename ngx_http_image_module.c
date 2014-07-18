@@ -402,6 +402,8 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 				{
 					ngx_int_t status;
                                         status = output(r,conf,ngx_http_image_types[conf->dest_type]);
+                                        //这里处理不好，图片未发送完成下面做了GD对象清理处理，导致图片输出不完整，怎么办？
+                                        //todo 处理好这个问题
                                         gd_cleanup(conf);
                                         return status;
 				}
