@@ -117,7 +117,6 @@ char * ngx_conf_set_number_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 char * ngx_conf_set_string_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type);
 static void gd_clean_data(void *data);//清除GD DATA数据
-static void gd_cleanup(void *conf);//清除GD对象
 static void make_thumb(void *conf);//创建GD对象缩略图,缩略图在此函数中已经处理好,但没有写入到文件
 static void water_mark(void *conf);//给图片打上水印
 static void thumb_to_string(void *conf);//GD对象数据转换为二进制字符串
@@ -492,14 +491,13 @@ ngx_http_image(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 {
-    ngx_int_t status;
+    ngx_int_t status = 0;
 	ngx_image_conf_t *info = conf;
 	ngx_http_complex_value_t  cv;
     ngx_pool_cleanup_t            *cln;
     cln = ngx_pool_cleanup_add(r->pool, 0);
     if (cln == NULL) {
         gdFree(info->img_data);
-        gd_cleanup(conf);
         return status;
     }
     cln->handler = gd_clean_data;
@@ -509,7 +507,6 @@ static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 	cv.value.len = info->img_size;
 	cv.value.data = (u_char *)info->img_data;
     status = ngx_http_send_response(r, NGX_HTTP_OK, &type, &cv);
-    gd_cleanup(conf);
     return status;
 }
 
@@ -528,32 +525,12 @@ static void thumb_to_string(void *conf)
         case NGX_IMAGE_JPEG:
             info->img_data = gdImageJpegPtr(info->dst_im,&info->img_size,info->jpeg_quality);
             break;
-        default:
-            return;
-            break;
     }
+    gdImageDestroy(info->dst_im);
 }
 
 static void gd_clean_data(void *data){
     gdFree(data);
-}
-
-static void gd_cleanup(void *conf){
-	ngx_image_conf_t *info = conf;
-	if(info->src_im != NULL){
-		gdImageDestroy(info->src_im);
-	}
-	if(info->dst_im != NULL)
-	{
-		gdImageDestroy(info->dst_im);
-	}
-	if(info->water_im != NULL){
-		gdImageDestroy(info->water_im);
-	}
-	if(info->w_margin > 0 && info->w_im != NULL)
-	{
-		gdImageDestroy(info->w_im);//释放补白边的对象
-	}
 }
 
 static void make_thumb(void *conf)
@@ -584,15 +561,17 @@ static void make_thumb(void *conf)
 		info->w_im = gdImageCreateTrueColor(info->width,info->height);
 		gdImageFilledRectangle(info->w_im, 0, 0, info->width,info->height, gdImageColorAllocate(info->w_im, 255, 255, 255));
         	info->dst_im = gdImageCreateTrueColor(info->max_width,info->max_height);
-        	gdImageFilledRectangle(info->dst_im, 0, 0, info->max_width,info->max_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
+gdImageFilledRectangle(info->dst_im, 0, 0, info->max_width,info->max_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
 		gdImageCopyResampled(info->w_im, info->src_im, 0, 0, info->src_x, info->src_y,info->width, info->height, info->src_w,info->src_h);
 		gdImageCopyResampled(info->dst_im, info->w_im, info->dst_x,info->dst_y, 0, 0,info->width, info->height, info->width, info->height);
+        gdImageDestroy(info->w_im);
     }
     else
     {
 
         gdImageCopyResampled(info->dst_im,info->src_im,info->dst_x,info->dst_y,info->src_x,info->src_y,info->width,info->height,info->src_w,info->src_h);
     }
+    gdImageDestroy(info->src_im);
 }
 static void water_mark(void *conf)
 {
@@ -617,11 +596,13 @@ static void water_mark(void *conf)
 			if(file_exists((char *)info->water_image.data) == 0)//判断水印图片是否存在
 			{
 				water_image_from(conf);//获取水印图片信息
-				if(info->water_im != NULL)//判断对象是否为空
+				if(info->water_im == NULL)//判断对象是否为空
 				{
-					water_w = info->water_im->sx;
-					water_h = info->water_im->sy;
-				}
+                    return;//水印文件异常
+                }else{
+                    water_w = info->water_im->sx;
+                    water_h = info->water_im->sy;
+                }
 			}
 			else
 			{
@@ -722,6 +703,7 @@ static void water_mark(void *conf)
 			gdImageCopy(tmp_im, info->water_im, 0, 0, 0, 0, water_w, water_h);
 			gdImageCopyMerge(info->dst_im, tmp_im,posX, posY, 0, 0, water_w,water_h,info->water_transparent);
 			gdImageDestroy(tmp_im);
+            gdImageDestroy(info->water_im);
 		}
 		else
 		{
@@ -1032,7 +1014,6 @@ static void write_img(void * conf)
 		fclose(fp);
 	}
     gdFree(info->img_data);
-	gd_cleanup(info);
 }
 
 
