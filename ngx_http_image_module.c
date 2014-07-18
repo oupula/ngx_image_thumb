@@ -499,6 +499,7 @@ static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
     cln = ngx_pool_cleanup_add(r->pool, 0);
     if (cln == NULL) {
         gdFree(info->img_data);
+        gd_cleanup(conf);
         return status;
     }
     cln->handler = gd_clean_data;
@@ -1232,3 +1233,5 @@ static void download(void * conf)
 	}
 	free(info->request_source);
 }
+
+
