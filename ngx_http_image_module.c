@@ -57,7 +57,6 @@ typedef struct
 	char * source_file;//原始图片路径
 	char * dest_file;//目标图片路径
 	u_char * img_data;//图片内容
-	char buffer[6][255];
 	gdImagePtr src_im;//原始图片GD对象
 	gdImagePtr dst_im;//目标图片GD对象
     gdImagePtr w_im;//补白边图片GD对象
@@ -102,7 +101,7 @@ static FILE *curl_handle;
 
 static ngx_str_t  ngx_http_image_types[] =
 {
-	ngx_string("text/html"),
+        ngx_string("text/html"),
 		ngx_string("image/jpeg"),
 		ngx_string("image/gif"),
 		ngx_string("image/png")
@@ -133,8 +132,8 @@ static void image_from(void * conf);//创建原图GD库对象
 static int get_header(char *url);//取得远程URL的返回值
 static size_t curl_get_data(void *ptr, size_t size, size_t nmemb, void *stream);//CURL调用函数
 static int create_dir(char *dir);//递归创建目录
-static void get_request_source(void * conf);
-static char* dirname(char *path);//根据URL获取目录路径
+static void get_request_source(void *conf);
+static void dirname(char *path,char *dirpath);//根据URL获取目录路径
 static void download(void * conf);//下载文件
 
 
@@ -361,6 +360,10 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 		return NGX_HTTP_NOT_MODIFIED;
 	}
 
+    if (r->headers_out.status == NGX_HTTP_NOT_MODIFIED) {
+        return NGX_HTTP_NOT_MODIFIED;
+    }
+
 	if (r->uri.data[r->uri.len - 1] == '/')
 	{
 		return NGX_DECLINED;
@@ -381,7 +384,7 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 		request_uri_len = strlen((char *)r->uri_start) - strlen((char *)r->uri_end);
 		strncpy(request_uri, (char *)r->uri_start, request_uri_len);
 		request_uri[request_uri_len] = '\0';
-		conf->request_dir = dirname(request_uri);
+		dirname(request_uri,conf->request_dir);
 		conf->url = request_uri;//请求的URL地址
 		conf->dest_file = (char *)path.data;
 		check_image_type(conf);//检查图片类型(根据后缀进行简单判断)
@@ -560,8 +563,8 @@ static void make_thumb(void *conf)
 
 		info->w_im = gdImageCreateTrueColor(info->width,info->height);
 		gdImageFilledRectangle(info->w_im, 0, 0, info->width,info->height, gdImageColorAllocate(info->w_im, 255, 255, 255));
-        	info->dst_im = gdImageCreateTrueColor(info->max_width,info->max_height);
-gdImageFilledRectangle(info->dst_im, 0, 0, info->max_width,info->max_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
+        info->dst_im = gdImageCreateTrueColor(info->max_width,info->max_height);
+        gdImageFilledRectangle(info->dst_im, 0, 0, info->max_width,info->max_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
 		gdImageCopyResampled(info->w_im, info->src_im, 0, 0, info->src_x, info->src_y,info->width, info->height, info->src_w,info->src_h);
 		gdImageCopyResampled(info->dst_im, info->w_im, info->dst_x,info->dst_y, 0, 0,info->width, info->height, info->width, info->height);
         gdImageDestroy(info->w_im);
@@ -720,6 +723,7 @@ static int parse_image_info(void *conf)
 	void (*old_pcre_free)(void *);
 	pcre *expr;//正则
 	char *pattern;
+    char buffer[6][255];
 	const char *error;//正则错误内容
 	int pcre_state=0;//匹配图片规则状态,0为成功 -1为失败
 	int erroffset;//正则错误位置
@@ -754,35 +758,35 @@ static int parse_image_info(void *conf)
 			{
 				char *substring_start = info->dest_file + ovector[2*i];
 				int substring_length = ovector[2*i+1] - ovector[2*i];
-				sprintf(info->buffer[i],"%.*s",substring_length,substring_start);
+				sprintf(buffer[i],"%.*s",substring_length,substring_start);
 				//printf("%d : %.*s\n",i,substring_length,substring_start);
 			}
-			info->source_file = info->buffer[1];
+			info->source_file = buffer[1];
 			if(info->pcre_type == 1)
 			{
 				/** combind source_file **/
 				strcat(info->source_file,"/");
-				strcat(info->source_file,info->buffer[2]);
+				strcat(info->source_file,buffer[2]);
 				strcat(info->source_file,".");
-				strcat(info->source_file,info->buffer[6]);
+				strcat(info->source_file,buffer[6]);
 				/** combind request_filename **/
-				info->request_filename = info->buffer[2];
+				info->request_filename = buffer[2];
 				strcat(info->request_filename,".");
-				strcat(info->request_filename,info->buffer[6]);
+				strcat(info->request_filename,buffer[6]);
 			}
 			else
 			{
 				/** combind source_file **/
 				strcat(info->source_file,"/");
-				strcat(info->source_file,info->buffer[2]);
+				strcat(info->source_file,buffer[2]);
 				/** combind request_filename **/
-				info->request_filename = info->buffer[2];
+				info->request_filename = buffer[2];
 			}
-			info->local_dir = dirname(info->buffer[1]);
-			info->dest_file = info->buffer[0];
-			info->m_type = info->buffer[3];
-			info->max_width = atoi(info->buffer[4]);
-			info->max_height = atoi(info->buffer[5]);
+			dirname(buffer[1],info->local_dir);
+			info->dest_file = buffer[0];
+			info->m_type = buffer[3];
+			info->max_width = atoi(buffer[4]);
+			info->max_height = atoi(buffer[5]);
 			info->max_width = (info->max_width > 2000) ? 2000 : info->max_width;
 			info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
 			if(info->max_width <= 0 || info->max_height <=0 ){
@@ -820,10 +824,10 @@ static int calc_image_info(void *conf)
 	info->src_type = get_ext_header(info->source_file);//读取原图头部信息金星判断图片格式
 	if( info->src_type > 0)
 	{
-        	info->w_margin = 0;//设置默认图片不补白边
+        info->w_margin = 0;//设置默认图片不补白边
 		info->src_im = NULL;
 		info->dst_im = NULL;
-        	info->w_im = NULL;
+        info->w_im = NULL;
 		image_from(conf);//读取原图图片到GD对象
 		if(info->src_im != NULL)
 		{
@@ -832,8 +836,8 @@ static int calc_image_info(void *conf)
 			info->src_height = info->src_im->sy;
 			info->src_x = 0;
 			info->src_y = 0;
-            		info->dst_x = 0;
-            		info->dst_y = 0;
+            info->dst_x = 0;
+            info->dst_y = 0;
 			info->src_w = info->src_width;
 			info->src_h = info->src_height;
 			info->width = info->max_width;
@@ -905,8 +909,8 @@ static int calc_image_info(void *conf)
 					info->src_w=info->width * info->src_height / info->height;
 					info->src_x=(info->src_width - info->src_w)/2;
 				}
-                    		info->dst_x = (float)((float)(info->max_width - info->width)/2);
-                    		info->dst_y = (float)((float)(info->max_height - info->height)/2);
+                info->dst_x = (float)((float)(info->max_width - info->width)/2);
+                info->dst_y = (float)((float)(info->max_height - info->height)/2);
                 		
 			}
 			else
@@ -1129,19 +1133,21 @@ static size_t curl_get_data(void *ptr, size_t size, size_t nmemb, void *stream)
 	return written;
 }
 
-static char* dirname(char *path)
+static void dirname(char *path,char *dirpath)
 {
 	char dirname[255];
 	int len = 0;
 	len=strlen(path);
-	for (;len>0;len--) //从最后一个元素开始找.直到找到第一个'/'
+    memset(dirname,0,sizeof(dirname));
+    for (;len>0;len--){ //从最后一个元素开始找.直到找到第一个'/'
 		if(path[len]=='/')
 		{
 			strncpy(dirname,path,len+1);
 			dirname[len] = '\0';
 			break;
 		}
-		return strdup(dirname);
+    }
+    *&dirpath = strdup(dirname);
 }
 
 static int create_dir(char *dir)
