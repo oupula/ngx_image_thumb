@@ -359,11 +359,7 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 	{
 		return NGX_HTTP_NOT_MODIFIED;
 	}
-
-    if (r->headers_out.status == NGX_HTTP_NOT_MODIFIED) {
-        return NGX_HTTP_NOT_MODIFIED;
-    }
-
+	
 	if (r->uri.data[r->uri.len - 1] == '/')
 	{
 		return NGX_DECLINED;
