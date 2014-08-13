@@ -147,21 +147,21 @@ Support JPEG / PNG / GIF {not animation}
  
 ## Use example
 
-- http://127.0.0.1/test.jpg!c300x300.jpg
+- http://oopul.vicp.net/test.jpg!c300x300.jpg
 
-- http://127.0.0.1/test.jpg!t300x300.jpg
+- http://oopul.vicp.net/test.jpg!t300x300.jpg
 
-- http://127.0.0.1/test.jpg!m300x300.jpg
+- http://oopul.vicp.net/test.jpg!m300x300.jpg
 
-- http://127.0.0.1/test.jpg!w300x300.jpg
+- http://oopul.vicp.net/test.jpg!w300x300.jpg
 
-- http://127.0.0.1/test.c300x300.jpg
+- http://oopul.vicp.net/test.c300x300.jpg
 
-- http://127.0.0.1/test.t300x300.jpg
+- http://oopul.vicp.net/test.t300x300.jpg
 
-- http://127.0.0.1/test.m300x300.jpg
+- http://oopul.vicp.net/test.m300x300.jpg
 
-- http://127.0.0.1/test.w300x300.jpg
+- http://oopul.vicp.net/test.w300x300.jpg
 
 
 
