@@ -163,21 +163,21 @@ image_water_color 水印文字颜色,默认 #000000
  
 ## 调用举例
 
-- http://oopul.vicp.net/test.jpg!c300x300.jpg
+- http://oopul.vicp.net/12.jpg!c300x300.jpg
 
-- http://oopul.vicp.net/test.jpg!t300x300.jpg
+- http://oopul.vicp.net/12.jpg!t300x300.jpg
 
-- http://oopul.vicp.net/test.jpg!m300x300.jpg
+- http://oopul.vicp.net/12.jpg!m300x300.jpg
 
-- http://oopul.vicp.net/test.jpg!w300x300.jpg
+- http://oopul.vicp.net/12.jpg!w300x300.jpg
 
-- http://oopul.vicp.net/test.c300x300.jpg
+- http://oopul.vicp.net/12.c300x300.jpg
 
-- http://oopul.vicp.net/test.t300x300.jpg
+- http://oopul.vicp.net/12.t300x300.jpg
 
-- http://oopul.vicp.net/test.m300x300.jpg
+- http://oopul.vicp.net/12.m300x300.jpg
 
-- http://oopul.vicp.net/test.w300x300.jpg
+- http://oopul.vicp.net/12.w300x300.jpg
 
 
 
