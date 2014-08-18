@@ -977,7 +977,11 @@ static int get_ext_header(char *filename)
 	else
 	{
 		unsigned short filetype;//bmp 0x4D42
-		fread(&filetype, sizeof(unsigned short), 1, handle);
+		if(fread(&filetype,sizeof(unsigned short),1,handle) != 1)
+		{
+			fclose(handle);
+			return NGX_IMAGE_NONE;
+		}
 		fclose(handle);
 		if( filetype == 0xD8FF)
 		{
