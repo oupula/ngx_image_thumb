@@ -5,7 +5,6 @@
 
 
 ##### Readme for english : <https://github.com/3078825/nginx-image/blob/master/README_EN.md> 
-###### My english so bad , you know.
 
 
 ### 模块同时支持 Nginx 和 tengine
