@@ -40,6 +40,8 @@
 #define NGX_IMAGE_PNG       3
 #define NGX_IMAGE_BMP       4
 
+#define MAX_DIR_PATH_LEN	256
+
 #ifndef WIN32
 #define stricmp strcasecmp
 #endif
@@ -48,15 +50,16 @@ typedef struct
 {
     ngx_flag_t image_status;//是否打开图片处理
 	char * url;//请求URL地址
-	char * request_dir;//URL目录
+	char request_dir[MAX_DIR_PATH_LEN];//URL目录
 	char * request_source;//URL源文件URL
 	char * request_filename;//URL中的文件名
-	char * local_dir;//当前WEB目录
+	char local_dir[MAX_DIR_PATH_LEN];//当前WEB目录
 	char * extension;//目标图片后缀名 (png/gif/jpg/jpeg/jpe)
 	char * m_type;//生成缩略图的方式 缩放/居中缩放/顶部10%开始缩放
 	char * source_file;//原始图片路径
 	char * dest_file;//目标图片路径
 	u_char * img_data;//图片内容
+	char buffer[10][255];
 	gdImagePtr src_im;//原始图片GD对象
 	gdImagePtr dst_im;//目标图片GD对象
     gdImagePtr w_im;//补白边图片GD对象
@@ -95,16 +98,17 @@ typedef struct
 	int water_font_size;//水印文字大小
 	ngx_str_t water_font;//文字水印字体文件路径
 	ngx_str_t water_color;//水印文字颜色 (#0000000)
+	ngx_http_request_t *request;//HTTP请求源
 } ngx_image_conf_t;
 
 static FILE *curl_handle;
 
 static ngx_str_t  ngx_http_image_types[] =
 {
-        ngx_string("text/html"),
-		ngx_string("image/jpeg"),
-		ngx_string("image/gif"),
-		ngx_string("image/png")
+	ngx_string("text/html"),
+	ngx_string("image/jpeg"),
+	ngx_string("image/gif"),
+	ngx_string("image/png")
 };
 
 static char *ngx_http_image(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
@@ -125,7 +129,7 @@ static void check_image_type(void *conf);//判断图片类型
 static char * get_ext(char *filename);//根据文件名取图片类型
 static int get_ext_header(char *filename);//根据文件头取图片类型
 static int file_exists(char *filename);//判断文件是否存在
-static int read_img(char **filename,int * size,void ** buffer);//图片读入函数
+static int read_img(char **filename,int * size,void ** buffer, ngx_http_request_t *request);//图片读入函数
 static void write_img(void * conf);//图片保存到文件
 static void water_image_from(void * conf);//创建水印图片GD对象
 static void image_from(void * conf);//创建原图GD库对象
@@ -136,168 +140,209 @@ static void get_request_source(void *conf);
 static void dirname(char *path,char *dirpath);//根据URL获取目录路径
 static void download(void * conf);//下载文件
 
+static int ngx_log(const char *format, ...);
+
+//日志模式
+#define LOG_MODE_DISABLE	0				//不输出日志
+#define LOG_MODE_CONSOLE	1				//日志输出到控制台
+#define LOG_MODE_FILE		2				//日志输出到文件
+#define LOG_MODE 			LOG_MODE_DISABLE
+
+#if LOG_MODE == LOG_MODE_FILE
+#define PRINT_LOG(level, log, ...)  ngx_log_error(level, log, 0, __VA_ARGS__) 
+#else
+#define PRINT_LOG(level, log, ...)  ngx_log(__VA_ARGS__)
+#endif
+
+
 
 static ngx_command_t  ngx_http_image_commands[] =
 {
 	{
 		ngx_string("image"),
-			NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-			ngx_http_image,
-			NGX_HTTP_LOC_CONF_OFFSET,
-			0,
-			NULL
+		NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_http_image,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL
 	},
 	{
 		ngx_string("image_output"),
-			NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-			ngx_conf_set_flag_slot,
-			NGX_HTTP_LOC_CONF_OFFSET,
-			offsetof(ngx_image_conf_t, image_output),
-			NULL
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, image_output),
+		NULL
 	},
-		{
-			ngx_string("image_backend"),
-				NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-				ngx_conf_set_flag_slot,
-				NGX_HTTP_LOC_CONF_OFFSET,
-				offsetof(ngx_image_conf_t, backend),
-				NULL
-		},
-		{
-			ngx_string("image_backend_server"),
-				NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-				ngx_conf_set_str_slot,
-				NGX_HTTP_LOC_CONF_OFFSET,
-				offsetof(ngx_image_conf_t, backend_server),
-				NULL
-		},
-			{
-				ngx_string("image_water"),
-					NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-					ngx_conf_set_flag_slot,
-					NGX_HTTP_LOC_CONF_OFFSET,
-					offsetof(ngx_image_conf_t, water_status),
-					NULL
-			},
-			{
-				ngx_string("image_water_type"),
-					NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
-					ngx_conf_set_number_slot,
-					NGX_HTTP_LOC_CONF_OFFSET,
-					offsetof(ngx_image_conf_t, water_type),
-					NULL
-			},
-				{
-					ngx_string("image_water_min"),
-						NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
-						ngx_http_image_water_min,
-						NGX_HTTP_LOC_CONF_OFFSET,
-						0,
-						NULL
-				},
-				{
-					ngx_string("image_water_pos"),
-						NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
-						ngx_conf_set_number_slot,
-						NGX_HTTP_LOC_CONF_OFFSET,
-						offsetof(ngx_image_conf_t, water_pos),
-						NULL
-				},
-					{
-						ngx_string("image_water_file"),
-							NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-							ngx_conf_set_str_slot,
-							NGX_HTTP_LOC_CONF_OFFSET,
-							offsetof(ngx_image_conf_t, water_image),
-							NULL
-					},
-					{
-						ngx_string("image_water_transparent"),
-							NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-							ngx_conf_set_number_slot,
-							NGX_HTTP_LOC_CONF_OFFSET,
-							offsetof(ngx_image_conf_t, water_transparent),
-							NULL
-					},
-						{
-							ngx_string("image_water_text"),
-								NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-								ngx_conf_set_str_slot,
-								NGX_HTTP_LOC_CONF_OFFSET,
-								offsetof(ngx_image_conf_t, water_text),
-								NULL
-						},
-						{
-							ngx_string("image_water_font"),
-								NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-								ngx_conf_set_str_slot,
-								NGX_HTTP_LOC_CONF_OFFSET,
-								offsetof(ngx_image_conf_t, water_font),
-								NULL
-						},
-							{
-								ngx_string("image_water_font_size"),
-									NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
-									ngx_conf_set_number_slot,
-									NGX_HTTP_LOC_CONF_OFFSET,
-									offsetof(ngx_image_conf_t, water_font_size),
-									NULL
-							},
-							{
-								ngx_string("image_water_color"),
-									NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-									ngx_conf_set_str_slot,
-									NGX_HTTP_LOC_CONF_OFFSET,
-									offsetof(ngx_image_conf_t, water_color),
-									NULL
-							},
-								{
-									ngx_string("image_jpeg_quality"),
-										NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
-										ngx_conf_set_number_slot,
-										NGX_HTTP_LOC_CONF_OFFSET,
-										offsetof(ngx_image_conf_t, jpeg_quality),
-										NULL
-								},
-								ngx_null_command
+	{
+		ngx_string("image_backend"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, backend),
+		NULL
+	},
+	{
+		ngx_string("image_backend_server"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, backend_server),
+		NULL
+	},
+	{
+		ngx_string("image_water"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_status),
+		NULL
+	},
+	{
+		ngx_string("image_water_type"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
+		ngx_conf_set_number_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_type),
+		NULL
+	},
+	{
+		ngx_string("image_water_min"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
+		ngx_http_image_water_min,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL
+	},
+	{
+		ngx_string("image_water_pos"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
+		ngx_conf_set_number_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_pos),
+		NULL
+	},
+	{
+		ngx_string("image_water_file"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_image),
+		NULL
+	},
+	{
+		ngx_string("image_water_transparent"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_number_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_transparent),
+		NULL
+	},
+	{
+		ngx_string("image_water_text"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_text),
+		NULL
+	},
+	{
+		ngx_string("image_water_font"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_font),
+		NULL
+	},
+	{
+		ngx_string("image_water_font_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
+		ngx_conf_set_number_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_font_size),
+		NULL
+	},
+	{
+		ngx_string("image_water_color"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, water_color),
+		NULL
+	},
+	{
+		ngx_string("image_jpeg_quality"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_ARGS_NUMBER,
+		ngx_conf_set_number_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_image_conf_t, jpeg_quality),
+		NULL
+	},
+	ngx_null_command
 };
 
 
 static ngx_http_module_t  ngx_http_image_module_ctx =
 {
-	NULL,                          /* preconfiguration */
-		NULL,                          /* postconfiguration */
+	NULL,                          	/* preconfiguration */
+	NULL,                          	/* postconfiguration */
 
-		NULL,                          /* create main configuration */
-		NULL,                          /* init main configuration */
+	NULL,                          	/* create main configuration */
+	NULL,                          	/* init main configuration */
 
-		NULL,                          /* create server configuration */
-		NULL,                          /* merge server configuration */
+	NULL,                          	/* create server configuration */
+	NULL,                          	/* merge server configuration */
 
-		ngx_http_image_create_loc_conf,                          /* create location configuration */
-		ngx_http_image_merge_loc_conf                           /* merge location configuration */
+	ngx_http_image_create_loc_conf, /* create location configuration */
+	ngx_http_image_merge_loc_conf   /* merge location configuration */
 };
 
 
 ngx_module_t  ngx_http_image_module =
 {
 	NGX_MODULE_V1,
-		&ngx_http_image_module_ctx,      /* module context */
-		ngx_http_image_commands,         /* module directives */
-		NGX_HTTP_MODULE,               /* module type */
-		NULL,                          /* init master */
-		NULL,                          /* init module */
-		NULL,                          /* init process */
-		NULL,                          /* init thread */
-		NULL,                          /* exit thread */
-		NULL,                          /* exit process */
-		NULL,                          /* exit master */
-		NGX_MODULE_V1_PADDING
+	&ngx_http_image_module_ctx,     /* module context */
+	ngx_http_image_commands,    	/* module directives */
+	NGX_HTTP_MODULE,               	/* module type */
+	NULL,                          	/* init master */
+	NULL,                          	/* init module */
+	NULL,                          	/* init process */
+	NULL,                          	/* init thread */
+	NULL,                          	/* exit thread */
+	NULL,                          	/* exit process */
+	NULL,                          	/* exit master */
+	NGX_MODULE_V1_PADDING
+};
+
+static int
+ngx_log(const char *format, ...)
+{
+#if LOG_MODE == LOG_MODE_DISABLE
+	return 0;
+#endif
+
+	int done; 
+	va_list arg;
+	
+	//打印临时日志
+	time_t rawtime;
+	struct tm * timeinfo;
+	time ( &rawtime );
+	timeinfo = localtime ( &rawtime );
+	printf ( "[INFO_Image] %04d.%02d.%02d %02d:%02d:%02d ", 
+		timeinfo->tm_year+1900, timeinfo->tm_mon+1, timeinfo->tm_mday, 
+		timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec );
+
+	va_start (arg, format); 
+	done = vfprintf (stdout, format, arg);   
+	va_end (arg);     
+	return done; 
 };
 
 static void *
 ngx_http_image_create_loc_conf(ngx_conf_t *cf)
 {
+	PRINT_LOG(NGX_LOG_ERR, cf->log, "FUNC  ngx_http_image_create_loc_conf \n");
 	ngx_image_conf_t  *conf;
 
 	conf = ngx_pcalloc(cf->pool, sizeof(ngx_image_conf_t));
@@ -322,6 +367,7 @@ ngx_http_image_create_loc_conf(ngx_conf_t *cf)
 static char *
 ngx_http_image_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 {
+	PRINT_LOG(NGX_LOG_ERR, cf->log, "FUNC  ngx_http_image_merge_loc_conf \n");
 	ngx_image_conf_t  *prev = parent;
 	ngx_image_conf_t  *conf = child;
 	ngx_conf_merge_value(conf->image_status,prev->image_status,0);
@@ -340,9 +386,9 @@ ngx_http_image_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 	return NGX_CONF_OK;
 }
 
-
 static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 {
+	PRINT_LOG(NGX_LOG_ERR, r->connection->log, "FUNC  ngx_http_image_handler \n");
 	u_char                    *last;
 	size_t                     root;
 	ngx_int_t                  rc;
@@ -350,7 +396,9 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 	char                       request_uri[255];
 	int                        request_uri_len;
 	ngx_image_conf_t  *conf;
+	
 	conf = ngx_http_get_module_loc_conf(r, ngx_http_image_module);
+	conf->request = r;
 	if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD)))
 	{
 		return NGX_HTTP_NOT_ALLOWED;
@@ -359,7 +407,7 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 	{
 		return NGX_HTTP_NOT_MODIFIED;
 	}
-	
+
 	if (r->uri.data[r->uri.len - 1] == '/')
 	{
 		return NGX_DECLINED;
@@ -370,11 +418,14 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 	{
 		return rc;
 	}
-	last = ngx_http_map_uri_to_path(r, &path, &root, 0);
+	last = ngx_http_map_uri_to_path(r, &path, &root, 0);	//从原服务器获取实际路径
 	if (last == NULL)
 	{
 		return NGX_HTTP_INTERNAL_SERVER_ERROR;
 	}
+	
+	PRINT_LOG(NGX_LOG_ERR, r->connection->log, "FUNC  ngx_http_image_handler, path = %s\n", 
+		(char *) path.data);
 	if(file_exists((char*) path.data) == -1)
 	{
 		request_uri_len = strlen((char *)r->uri_start) - strlen((char *)r->uri_end);
@@ -384,9 +435,10 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 		conf->url = request_uri;//请求的URL地址
 		conf->dest_file = (char *)path.data;
 		check_image_type(conf);//检查图片类型(根据后缀进行简单判断)
+		PRINT_LOG(NGX_LOG_ERR, r->connection->log, 
+			"FUNC  ngx_http_image_handler, request_uri = %s\n", request_uri);
 		if( conf->dest_type > 0 )
 		{
-
 			if (parse_image_info(conf) == 0)//解析并处理请求的图片URL
 			{
 
@@ -404,11 +456,13 @@ static ngx_int_t ngx_http_image_handler(ngx_http_request_t *r)
 			}
 		}
 	}
+	
 	return NGX_DECLINED;
 }
 
 static char * ngx_http_image_water_min(ngx_conf_t *cf, ngx_command_t *cmd,void *conf)
 {
+	PRINT_LOG(NGX_LOG_ERR, cf->log, "FUNC  ngx_http_image_water_min \n");
 	ngx_image_conf_t *info = conf;
 	ngx_str_t                         *value;
 	ngx_http_complex_value_t           cv;
@@ -447,6 +501,7 @@ static ngx_uint_t ngx_http_image_value(ngx_str_t *value)
 
 char * ngx_conf_set_number_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
+	PRINT_LOG(NGX_LOG_ERR, cf->log, "FUNC  ngx_conf_set_number_slot \n");
 	char  *p = conf;
 	int        *np;
 	ngx_str_t        *value;
@@ -467,6 +522,7 @@ char * ngx_conf_set_number_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 static char *
 ngx_http_image(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
+	PRINT_LOG(NGX_LOG_ERR, cf->log, "FUNC  ngx_http_image \n");
 	ngx_str_t        *value;
 	value = cf->args->elts;
 	if (ngx_strcasecmp(value[1].data, (u_char *) "on") == 0)
@@ -490,18 +546,22 @@ ngx_http_image(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 {
-    ngx_int_t status = 0;
+	PRINT_LOG(NGX_LOG_ERR, r->connection->log, "FUNC  output \n");
+	ngx_int_t status = 0;
 	ngx_image_conf_t *info = conf;
 	ngx_http_complex_value_t  cv;
-    ngx_pool_cleanup_t            *cln;
+
+    ngx_pool_cleanup_t *cln;
     cln = ngx_pool_cleanup_add(r->pool, 0);
     if (cln == NULL) {
-        gdFree(info->img_data);
+		PRINT_LOG(NGX_LOG_ERR, r->connection->log, "FUNC  output 1\n");
+		gd_clean_data(info);
         return status;
     }
+	
+	PRINT_LOG(NGX_LOG_ERR, r->connection->log, "FUNC  output 2\n");
     cln->handler = gd_clean_data;
-    cln->data = info->img_data;
-
+    cln->data = info;
 	ngx_memzero(&cv, sizeof(ngx_http_complex_value_t));
 	cv.value.len = info->img_size;
 	cv.value.data = (u_char *)info->img_data;
@@ -512,7 +572,7 @@ static ngx_int_t output(ngx_http_request_t *r,void *conf,ngx_str_t type)
 static void thumb_to_string(void *conf)
 {
 	ngx_image_conf_t *info = conf;
-
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  thumb_to_string \n");
 	switch(info->dest_type)
 	{
         case NGX_IMAGE_PNG:
@@ -525,11 +585,58 @@ static void thumb_to_string(void *conf)
             info->img_data = gdImageJpegPtr(info->dst_im,&info->img_size,info->jpeg_quality);
             break;
     }
-    gdImageDestroy(info->dst_im);
+	
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+		"FUNC  thumb_to_string, gdImageDestroy(info->dst_im), info->dst_im = %p\n",  info->dst_im);
+	if (info->dst_im) 
+	{
+		gdImageDestroy(info->dst_im);
+		info->dst_im = NULL;
+	}
 }
 
 static void gd_clean_data(void *data){
-    gdFree(data);
+	ngx_image_conf_t *info = data;
+	if (info->img_data) 
+	{
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  gd_clean_data, gdFree(info->img_data), info->img_data = %p, info->img_size = %d \n", 
+			info->img_data, info->img_size);
+		gdFree(info->img_data);
+		info->img_data = NULL;
+	}
+	
+	if (info->src_im) 
+	{
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  gd_clean_data, gdImageDestroy(info->src_im), info->src_im = %p \n", info->src_im);
+		gdImageDestroy(info->src_im);
+		info->src_im = NULL;
+	}
+	
+	if (info->dst_im) 
+	{
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  gd_clean_data, gdImageDestroy(info->dst_im), info->dst_im = %p \n", info->dst_im);
+		gdImageDestroy(info->dst_im);
+		info->dst_im = NULL;
+	}
+	
+	if (info->w_im) 
+	{
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  gd_clean_data, gdImageDestroy(info->w_im), info->w_im = %p \n", info->w_im);
+		gdImageDestroy(info->w_im);
+		info->w_im = NULL;
+	}
+	
+	if (info->water_im) 
+	{
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  gd_clean_data, gdImageDestroy(info->water_im), info->water_im = %p \n", info->water_im);
+		gdImageDestroy(info->water_im);
+		info->water_im = NULL;
+	}
 }
 
 static void make_thumb(void *conf)
@@ -537,11 +644,12 @@ static void make_thumb(void *conf)
 	int colors = 0;
 	int transparent = -1;
 	ngx_image_conf_t *info = conf;
-	info->dst_im = gdImageCreateTrueColor(info->width,info->height);
+	info->dst_im = gdImageCreateTrueColor(info->width,info->height);	//这里根据转换后的参数生产图片
 	colors = gdImageColorsTotal(info->src_im);
 	transparent = gdImageGetTransparent(info->src_im);
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  make_thumb \n"); 
 	if (transparent == -1)
-        {
+    {
 		gdImageSaveAlpha(info->src_im,1);
 		gdImageColorTransparent(info->src_im, -1);
 		if(colors == 0)
@@ -559,18 +667,25 @@ static void make_thumb(void *conf)
 
 		info->w_im = gdImageCreateTrueColor(info->width,info->height);
 		gdImageFilledRectangle(info->w_im, 0, 0, info->width,info->height, gdImageColorAllocate(info->w_im, 255, 255, 255));
+		if (info->dst_im) 
+		{
+			gdImageDestroy(info->dst_im);
+			info->dst_im = NULL;
+		}
         info->dst_im = gdImageCreateTrueColor(info->max_width,info->max_height);
         gdImageFilledRectangle(info->dst_im, 0, 0, info->max_width,info->max_height, gdImageColorAllocate(info->dst_im, 255, 255, 255));
 		gdImageCopyResampled(info->w_im, info->src_im, 0, 0, info->src_x, info->src_y,info->width, info->height, info->src_w,info->src_h);
 		gdImageCopyResampled(info->dst_im, info->w_im, info->dst_x,info->dst_y, 0, 0,info->width, info->height, info->width, info->height);
         gdImageDestroy(info->w_im);
+		info->w_im = NULL;
     }
     else
     {
-
         gdImageCopyResampled(info->dst_im,info->src_im,info->dst_x,info->dst_y,info->src_x,info->src_y,info->width,info->height,info->src_w,info->src_h);
     }
+	
     gdImageDestroy(info->src_im);
+	info->src_im = NULL;
 }
 static void water_mark(void *conf)
 {
@@ -587,6 +702,7 @@ static void water_mark(void *conf)
 	water_font = NULL;
 	water_color_text = NULL;
 
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  water_mark \n");
 	if(info->water_status)//如果水印功能打开了
 	{
 
@@ -598,7 +714,7 @@ static void water_mark(void *conf)
 				if(info->water_im == NULL)//判断对象是否为空
 				{
                     return;//水印文件异常
-                }else{
+                } else {
                     water_w = info->water_im->sx;
                     water_h = info->water_im->sy;
                 }
@@ -703,6 +819,7 @@ static void water_mark(void *conf)
 			gdImageCopyMerge(info->dst_im, tmp_im,posX, posY, 0, 0, water_w,water_h,info->water_transparent);
 			gdImageDestroy(tmp_im);
             gdImageDestroy(info->water_im);
+			info->water_im = NULL;
 		}
 		else
 		{
@@ -719,7 +836,6 @@ static int parse_image_info(void *conf)
 	void (*old_pcre_free)(void *);
 	pcre *expr;//正则
 	char *pattern;
-    char buffer[6][255];
 	const char *error;//正则错误内容
 	int pcre_state=0;//匹配图片规则状态,0为成功 -1为失败
 	int erroffset;//正则错误位置
@@ -732,6 +848,8 @@ static int parse_image_info(void *conf)
 	old_pcre_free = pcre_free;
 	pcre_malloc = malloc;
 	pcre_free = free;
+	
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  parse_image_info \n");
 	if(strchr(info->dest_file,'!'))
 	{
 		info->pcre_type = 0;
@@ -748,55 +866,69 @@ static int parse_image_info(void *conf)
 	if(expr != NULL)
 	{
 		expr_res = pcre_exec(expr,NULL,(const char *)info->dest_file,ngx_strlen(info->dest_file),0,0,ovector,30);
-		if(expr_res > 5)
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  parse_image_info, expr_res=%d\n", expr_res);
+
+		//printf("parse_image_info dest_file=%s,%ld\n", (const char *)info->dest_file, ngx_strlen(info->dest_file));
+		if (expr_res > 5)
 		{
 			for(i=0; i<expr_res; i++)
 			{
 				char *substring_start = info->dest_file + ovector[2*i];
 				int substring_length = ovector[2*i+1] - ovector[2*i];
-				sprintf(buffer[i],"%.*s",substring_length,substring_start);
-				//printf("%d : %.*s\n",i,substring_length,substring_start);
+				sprintf(info->buffer[i],"%.*s",substring_length,substring_start);
+				//printf("parse_image_info buff[%d] : %d %s\n",i,substring_length,substring_start);
 			}
-			info->source_file = buffer[1];
+			
+			info->source_file = info->buffer[1];
 			if(info->pcre_type == 1)
 			{
 				/** combind source_file **/
 				strcat(info->source_file,"/");
-				strcat(info->source_file,buffer[2]);
+				strcat(info->source_file, info->buffer[2]);
 				strcat(info->source_file,".");
-				strcat(info->source_file,buffer[6]);
+				strcat(info->source_file, info->buffer[expr_res-1]);
 				/** combind request_filename **/
-				info->request_filename = buffer[2];
+				info->request_filename = info->buffer[2];
 				strcat(info->request_filename,".");
-				strcat(info->request_filename,buffer[6]);
+				strcat(info->request_filename, info->buffer[expr_res-1]);
 			}
 			else
 			{
 				/** combind source_file **/
 				strcat(info->source_file,"/");
-				strcat(info->source_file,buffer[2]);
+				strcat(info->source_file,info->buffer[2]);
 				/** combind request_filename **/
-				info->request_filename = buffer[2];
+				info->request_filename = info->buffer[2];
 			}
-			dirname(buffer[1],info->local_dir);
-			info->dest_file = buffer[0];
-			info->m_type = buffer[3];
-			info->max_width = atoi(buffer[4]);
-			info->max_height = atoi(buffer[5]);
-			info->max_width = (info->max_width > 2000) ? 2000 : info->max_width;
+			
+			dirname(info->buffer[1],info->local_dir);
+			info->dest_file = info->buffer[0];
+			info->m_type = info->buffer[3];
+			info->max_width = atoi(info->buffer[4]);	//超大时会出错
+			info->max_height = atoi(info->buffer[5]);
+			info->max_width = (info->max_width > 2000) ? 2000 : (info->max_width);	//限定最大值
 			info->max_height = (info->max_height > 2000) ? 2000 : info->max_height;
-			if(info->max_width <= 0 || info->max_height <=0 ){
-                        	//如果图片小于等于0，则可以判断请求无效了
-                        	pcre_free(expr);
+			PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+				"FUNC  parse_image_info, info->dest_file= %s, info->local_dir= %s,  info->source_file = %s, "
+				"info->m_type = %s, info->max_width = %d, info->max_height = %d, info->request_filename = %s \n", 
+				info->dest_file, info->local_dir, info->source_file,
+				info->m_type, info->max_width, info->max_height, info->request_filename);
+			if((info->max_width < 0) || (info->max_height < 0)) 
+			{
+            	//如果图片小于0，则可以判断请求无效了
+                pcre_free(expr);
 				pcre_malloc = old_pcre_malloc;
 				pcre_free = old_pcre_free;
-                        	return -1;
-                        }
-			//printf("source_file:%s\n",info->source_file);
+                return -1;
+            }
 			if(file_exists(info->source_file) == -1)//原图不存在
 			{
 				download(conf);
 			}
+			PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+				"FUNC  parse_image_info, info->dest_file= %s, info->local_dir= %s, info->source_file = %s \n", 
+				info->dest_file, info->local_dir, info->source_file);
 			if(file_exists(info->source_file) == 0)
 			{
 				pcre_state = calc_image_info(conf);
@@ -806,12 +938,14 @@ static int parse_image_info(void *conf)
 				return pcre_state;
 			}
 		}
+		
 		pcre_free(expr);
 		//恢复Nginx默认PCRE内存分配
 		pcre_malloc = old_pcre_malloc;
 		pcre_free = old_pcre_free;
 		//END
 	}
+	
 	return -1;
 }
 static int calc_image_info(void *conf)
@@ -911,11 +1045,17 @@ static int calc_image_info(void *conf)
 			}
 			else
 			{
+				gdImageDestroy(info->src_im);
+				info->src_im = NULL;
 				return -1;
 			}
+			
 			return 0;
 		}
 	}
+	
+	gdImageDestroy(info->src_im);
+	info->src_im = NULL;
 	return -1;
 }
 
@@ -937,6 +1077,8 @@ static void check_image_type(void *conf)
 	}
 	else
 	{
+
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "ERROR 不支持的扩展名=%s", info->extension);
 		info->dest_type = NGX_IMAGE_NONE;
 	}
 }
@@ -1007,35 +1149,64 @@ static void write_img(void * conf)
 {
 	ngx_image_conf_t *info = conf;
 	FILE * fp;
+	
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  write_img \n");
 	if(info->img_data == NULL)
 	{
 		return;
 	}
+	
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+		"FUNC  write_img, info->dest_file = %s, info->img_data = %p, info->img_size = %d \n", 
+		info->dest_file, info->img_data, info->img_size);
 	fp = fopen(info->dest_file,"wb");
 	if(fp)
 	{
 		fwrite(info->img_data,sizeof(char),info->img_size,fp);
 		fclose(fp);
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  write_img, info->img_data = %p, info->img_size = %d \n", info->img_data, info->img_size);
 	}
+	
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+		"FUNC  write_img, gdFree(info->img_data), info->img_data = %p \n", info->img_data);
     gdFree(info->img_data);
+	info->img_data = NULL;
 }
 
-
-
-
-static int read_img(char **filename,int * size,void ** buffer)
+static int read_img(char **filename,int * size,void ** buffer, ngx_http_request_t *request)
 {
+	PRINT_LOG(NGX_LOG_ERR, request->connection->log, "FUNC  read_img, filename = %s \n", *filename);  
 	FILE *fp;
 	struct stat stat_buffer;
+	
 	fp = fopen(*filename, "rb");
 	if (fp)
 	{
 		fstat(fileno(fp),&stat_buffer);
-		*buffer = malloc(stat_buffer.st_size);
+		if (stat_buffer.st_size <= 0) 
+		{
+			return -1;
+		}
+		
+		//*buffer = malloc(stat_buffer.st_size);
+		if (NULL == request) {
+			return -1;
+		}
+		
+		*buffer = ngx_palloc(request->pool, stat_buffer.st_size);
+        if (NULL == *buffer) {
+			ngx_pfree(request->pool, *buffer);
+            return -1;
+        }
+		
 		if(fread(*buffer,1,stat_buffer.st_size,fp))
 		{
 			*size = stat_buffer.st_size;
+			PRINT_LOG(NGX_LOG_ERR, request->connection->log, 
+				"FUNC  read_img, ngx_palloc, *buffer = %p, size = %d \n", *buffer, stat_buffer.st_size);
 		}
+	
 		fclose(fp);
 		return 0;
 	}
@@ -1047,12 +1218,14 @@ static void water_image_from(void * conf)
 	int size = 0;
 	void * buffer;
 	char * water_file;
+	
 	ngx_image_conf_t *info = conf;
 	info->water_im = NULL;
 	water_file = (char *)info->water_image.data;
 	info->water_im_type = get_ext_header(water_file);
-	if((read_img(&water_file,&size,&buffer)) == 0)
-	{
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  water_image_from \n"); 
+	if((read_img(&water_file,&size,&buffer, info->request)) == 0)
+	{	
 		switch(info->water_im_type)
 		{
 		case NGX_IMAGE_GIF:
@@ -1065,7 +1238,11 @@ static void water_image_from(void * conf)
 			info->water_im = gdImageCreateFromPngPtr(size,buffer);
 			break;
 		}
-		free(buffer);
+		
+		//free(buffer);
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  water_image_from, ngx_pfree, buffer = %p\n", buffer);
+		ngx_pfree(info->request->pool, buffer);
 		return;
 	}
 }
@@ -1075,8 +1252,14 @@ static void image_from(void * conf)
 	int size = 0;
 	void * buffer;
 	ngx_image_conf_t *info = conf;
+	if (info->src_im) 
+	{
+		gdImageDestroy(info->src_im);
+	}
+	
 	info->src_im = NULL;
-	if((read_img(&info->source_file,&size,&buffer)) == 0)
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  image_from \n");
+	if((read_img(&info->source_file,&size,&buffer, info->request)) == 0)
 	{
 		switch(info->src_type)
 		{
@@ -1090,7 +1273,11 @@ static void image_from(void * conf)
 				info->src_im = gdImageCreateFromPngPtr(size,buffer);
 				break;
 		}
-		free(buffer);
+		
+		//free(buffer);
+		PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, 
+			"FUNC  image_from, ngx_pfree, buffer = %p\n", buffer);
+		ngx_pfree(info->request->pool, buffer);
 		return;
 	}
 }
@@ -1135,11 +1322,13 @@ static size_t curl_get_data(void *ptr, size_t size, size_t nmemb, void *stream)
 
 static void dirname(char *path,char *dirpath)
 {
-	char dirname[255];
+	char dirname[MAX_DIR_PATH_LEN];
 	int len = 0;
 	len=strlen(path);
     memset(dirname,0,sizeof(dirname));
-    for (;len>0;len--){ //从最后一个元素开始找.直到找到第一个'/'
+    for (;len>0;len--)
+	{ 
+		//从最后一个元素开始找.直到找到第一个'/'
 		if(path[len]=='/')
 		{
 			strncpy(dirname,path,len+1);
@@ -1147,14 +1336,17 @@ static void dirname(char *path,char *dirpath)
 			break;
 		}
     }
-    *&dirpath = strdup(dirname);
+	
+	if (dirpath) {
+		strcpy(dirpath, dirname);
+	}
 }
 
 static int create_dir(char *dir)
 {
 	int i;
 	int len;
-	char dirname[256];
+	char dirname[MAX_DIR_PATH_LEN];
 	strcpy(dirname,dir);
 	len=strlen(dirname);
 	if(dirname[len-1]!='/')
@@ -1195,6 +1387,8 @@ static void get_request_source(void * conf)
 static void download(void * conf)
 {
 	ngx_image_conf_t *info = conf;
+	
+	PRINT_LOG(NGX_LOG_ERR, info->request->connection->log, "FUNC  download \n");
 	get_request_source(conf);//取得请求的URL的原始文件
 	if (get_header(info->request_source) == 0)
 	{
