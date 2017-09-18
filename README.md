@@ -4,7 +4,7 @@
 ##### 网址:<http://www.oupula.org>
 
 
-##### Readme for english : <https://github.com/3078825/nginx-image/blob/master/README_EN.md> 
+##### Readme for english : <https://github.com/oupula/ngx_image_thumb/blob/master/README_EN.md> 
 
 
 ### 模块同时支持 Nginx 和 tengine
@@ -64,7 +64,7 @@ $ cd nginx-1.4.0
 ```
 
 ```bash
-$ wget https://github.com/3078825/nginx-image/archive/master.zip
+$ wget https://github.com/oupula/ngx_image_thumb/archive/master.zip
 $ unzip master.zip
 $ ./configure --add-module=./nginx-image-master
 $ make
