@@ -47,7 +47,7 @@ $ cd nginx-1.4.0
 ```
 
 ```bash
-$ wget https://github.com/3078825/nginx-image/archive/master.zip
+$ wget https://github.com/oupula/ngx_image_thumb/archive/master.zip
 $ unzip master.zip
 $ ./configure --add-module=./nginx-image-master
 $ make
