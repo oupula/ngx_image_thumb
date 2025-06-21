@@ -1,10 +1,4 @@
-# Nginx Image 缩略图 模块 
-
-##### 邮箱:<oopul@msn.com>
-##### 网址:<http://www.oupula.org>
-
-
-##### Readme for english : <https://github.com/oupula/ngx_image_thumb/blob/master/README_EN.md> 
+# Nginx Image 缩略图 模块
 
 
 ### 模块同时支持 Nginx 和 tengine
